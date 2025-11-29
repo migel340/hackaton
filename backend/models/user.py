@@ -14,4 +14,5 @@ class User(SQLModel, table=True):
     is_active: bool = Field(default=False)
     created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
 
+
 __all__ = ["User"]

@@ -123,9 +123,12 @@ export default function LoginPage() {
 
             <div className="divider">lub</div>
 
-            <p className="text-center text-sm">
+            <p className="text-sm text-gray-600 text-center mt-2">
               Nie masz konta?{" "}
-              <Link to="/auth/register" className="link link-primary">
+              <Link
+                to="/register"
+                className="text-indigo-600 hover:text-indigo-700"
+              >
                 Zarejestruj się
               </Link>
             </p>

@@ -5,8 +5,11 @@ from sqlmodel import Session, SQLModel, create_engine
 from config import settings
 from models.user import User  # noqa: F401 - needed for SQLModel.metadata
 
-# Database URL from env via config, fallback to sqlite
+# Database URL from env via config
 DATABASE_URL = settings.DATABASE_URL
+
+if DATABASE_URL is None:
+    raise ValueError("DATABASE_URL is not set in environment variables")
 
 # Engine (shared)
 engine = create_engine(DATABASE_URL, echo=bool(settings.DEBUG))

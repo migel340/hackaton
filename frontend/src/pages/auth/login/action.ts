@@ -36,7 +36,6 @@ export async function action({ request }: ActionFunctionArgs) {
   try {
     const res = await login(email, password, { remember });
 
-    // Jeżeli backend zwraca ok/token, uznaj sukces.
     if (res && (res.ok || res.token)) {
       const url = new URL(request.url);
       const redirectParam =
@@ -48,7 +47,6 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
-    // Gdy backend zwróci błąd bez statusu ok
     const message = res?.message || "Logowanie nie powiodło się.";
     return json<ActionData>({ ok: false, message }, { status: 401 });
   } catch (e: any) {
