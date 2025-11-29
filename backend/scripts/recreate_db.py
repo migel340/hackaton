@@ -27,7 +27,14 @@ def recreate_tables():
         return
     
     print("\n🗑️  Usuwanie wszystkich tabel...")
-    SQLModel.metadata.drop_all(engine)
+    # Użyj CASCADE do usunięcia tabel z zależnościami
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        # Usuń CASCADE
+        conn.execute(text("DROP TABLE IF EXISTS useractivity CASCADE"))
+        conn.execute(text("DROP TABLE IF EXISTS \"user\" CASCADE"))
+        conn.execute(text("DROP TYPE IF EXISTS activitytype CASCADE"))
+        conn.commit()
     print("✅ Tabele usunięte")
     
     print("\n🔨 Tworzenie nowych tabel...")
