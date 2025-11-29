@@ -3,7 +3,7 @@
 ## 🚀 Szybki Start
 
 ### Wymagania
-- Python 3.12+ 
+- Python 3.14+ 
 - Docker & Docker Compose (dla bazy danych)
 - VS Code (zalecane)
 
@@ -25,7 +25,7 @@ docker-compose up -d
 **Opcja B - Ręcznie:**
 ```bash
 # Utwórz venv
-python3 -m venv .venv
+python3.14 -m venv .venv
 
 # Aktywuj venv
 source .venv/bin/activate  # macOS/Linux
@@ -264,7 +264,7 @@ CORS_ORIGINS=http://localhost:3000,http://localhost:5173
 
 ## ✅ Checklist dla Nowych Developerów
 
-- [ ] Python 3.12+ zainstalowany
+- [ ] Python 3.14+ zainstalowany
 - [ ] Docker Desktop zainstalowany i uruchomiony
 - [ ] Repozytorium sklonowane
 - [ ] `.venv` utworzone
