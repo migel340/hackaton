@@ -16,7 +16,6 @@ export async function login(
   password: string,
   opts?: { remember?: boolean }
 ): Promise<LoginResult> {
-  // Zakładamy endpoint POST /api/auth/login oraz cookies (credentials: include)
   const result = await api.post<LoginResult>("auth/login", {
     email,
     password,
@@ -34,4 +33,30 @@ export async function me(): Promise<{
   user?: LoginResult["user"];
 }> {
   return api.get<{ ok: boolean; user?: LoginResult["user"] }>("auth/me");
+}
+
+export async function registerUser(payload: {
+  name: string;
+  email: string;
+  password: string;
+}) {
+  const res = await fetch("/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const msg = await safeMessage(res);
+    throw new Error(msg || "Rejestracja nie powiodła się");
+  }
+  return res.json();
+}
+
+async function safeMessage(res: Response) {
+  try {
+    const data = await res.json();
+    return data?.message;
+  } catch {
+    return null;
+  }
 }
