@@ -44,5 +44,6 @@ def health_check():
 
 
 # Register routers (mounted under /api/v1)
-app.include_router(users_router.router, prefix="/api/v1/users", tags=["users"])
-app.include_router(auth_router.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(auth_router.router, prefix="/api/v1")
+app.include_router(users_router.router, prefix="/api/v1")
+

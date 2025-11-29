@@ -28,11 +28,13 @@ MarkupSafe==3.0.3
 mdurl==0.1.2
 mypy_extensions==1.1.0
 packaging==25.0
+passlib[bcrypt]==1.7.4
 pexpect==4.9.0
 pluggy==1.6.0
 psycopg2-binary==2.9.11 
 ptyprocess==0.7.0
 pycparser==2.22
+python-jose[cryptography]==3.3.0
 pydantic==2.12.5
 pydantic_core==2.41.5
 Pygments==2.19.2
