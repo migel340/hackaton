@@ -44,6 +44,12 @@ def add_activity(
         )
     
     # Utwórz nową aktywność
+    if current_user.id is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="User ID is missing"
+        )
+    
     new_activity = UserActivity(
         user_id=current_user.id,
         activity_type=activity_data.activity_type,
