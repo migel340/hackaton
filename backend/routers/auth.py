@@ -70,18 +70,18 @@ def login(credentials: UserLogin, session: Session = Depends(get_session)):
     """
     Logowanie użytkownika - zwraca JWT token.
     
-    - **username**: Nazwa użytkownika
+    - **email**: Adres email użytkownika
     - **password**: Hasło
     """
-    # Znajdź użytkownika
+    # Znajdź użytkownika po emailu
     user = session.exec(
-        select(User).where(User.username == credentials.username)
+        select(User).where(User.email == credentials.email)
     ).first()
     
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
@@ -89,7 +89,7 @@ def login(credentials: UserLogin, session: Session = Depends(get_session)):
     if not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     

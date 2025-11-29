@@ -48,6 +48,10 @@ def test_registration():
         # Utwórz nowego
         new_user = User(
             username="Lolol",
+            email="test@example.com",
+            hashed_password=hashed,
+            is_active=True
+        )
             email="user@example.com",
             hashed_password=hashed,
             is_active=True
