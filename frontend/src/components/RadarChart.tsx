@@ -419,7 +419,7 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
         className="absolute inset-0 cursor-grab"
       />
       
-      {/* Controls */}
+      // {/* Controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2">
         <button
           onClick={() => setView(prev => ({ ...prev, scale: Math.min(5, prev.scale * 1.2) }))}
@@ -448,23 +448,23 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
       <div className="absolute top-4 left-4 bg-base-300/80 px-3 py-1 rounded-lg backdrop-blur-sm text-sm">
         {Math.round(view.scale * 100)}%
       </div>
-      
-      {/* Legend */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-base-300/90 px-4 py-2 rounded-lg backdrop-blur-sm">
-        {Object.entries(signalTypeLabels).map(([type, label]) => (
-          <div key={type} className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: signalTypeColors[type] }}
-            />
-            <span className="text-sm text-base-content">{label}</span>
-          </div>
-        ))}
-      </div>
 
-      {/* Instructions */}
-      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 text-xs text-base-content/50">
-        Scroll aby przybliżyć/oddalić • Przeciągnij aby przesunąć
+      {/* Legend & Instructions */}
+      <div className="absolute bottom-4 left-4 flex flex-col gap-2">
+        <div className="flex gap-4 bg-base-300/90 px-4 py-2 rounded-lg backdrop-blur-sm">
+          {Object.entries(signalTypeLabels).map(([type, label]) => (
+            <div key={type} className="flex items-center gap-2">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: signalTypeColors[type] }}
+              />
+              <span className="text-sm text-base-content">{label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="text-xs text-base-content/50">
+          Scroll aby przybliżyć/oddalić • Przeciągnij aby przesunąć
+        </div>
       </div>
     </div>
   );

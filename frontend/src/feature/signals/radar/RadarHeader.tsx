@@ -16,10 +16,8 @@ export const RadarHeader = ({
   onUserSignalChange,
 }: RadarHeaderProps) => {
   return (
-    <div className="absolute top-4 left-4 right-4 flex flex-wrap items-center justify-between gap-2 z-10">
-      {/* Title */}
+    <div className="relative top-4 flex items-center justify-between gap-10 z-10">
       <div className="flex items-center gap-3 bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2">
-        <span className="text-2xl">🎯</span>
         <div>
           <h1 className="font-bold text-lg">Radar Dopasowań</h1>
           <p className="text-xs text-base-content/60">
@@ -28,7 +26,6 @@ export const RadarHeader = ({
         </div>
       </div>
 
-      {/* User Signal Selector */}
       <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-3">
         <span className="text-sm font-medium">Twoja aktywność:</span>
         <select
@@ -45,7 +42,6 @@ export const RadarHeader = ({
         </select>
       </div>
 
-      {/* Current Signal Type Badge */}
       <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
         <span className="text-sm font-medium">Typ:</span>
         <span className={`badge ${signalTypeTextColors[userSignal.type]}`}>
