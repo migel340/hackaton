@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from backend.routers import users as users_router
 from backend.routers import auth as auth_router
-from backend.models.db import create_db_and_tables
+from backend.services.db import create_db_and_tables
 # Import DB helpers and models from the separated modules:
 
 # Zezwalamy na komunikację z frontendem
