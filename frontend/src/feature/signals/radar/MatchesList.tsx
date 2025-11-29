@@ -13,7 +13,6 @@ export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
 
   return (
     <div className="relative h-full flex items-center">
-      {/* Toggle button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full z-20 btn btn-sm bg-base-200 hover:bg-base-300 border-0 rounded-l-lg rounded-r-none h-24 px-2 shadow-lg"
@@ -22,7 +21,6 @@ export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
         <span className="text-lg">{isOpen ? "›" : "‹"}</span>
       </button>
 
-      {/* Panel */}
       <div
         className={`h-full transition-all duration-300 ease-in-out overflow-hidden ${
           isOpen ? "w-80 xl:w-96" : "w-0"
@@ -31,7 +29,6 @@ export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
         <div className="w-80 xl:w-96 h-full bg-base-200 p-4 flex flex-col">
           {/* Header */}
           <h2 className="font-bold text-lg mb-3 flex items-center gap-2">
-            <span>📋</span>
             Dopasowania
             <span className="badge badge-sm">{matches.length}</span>
           </h2>

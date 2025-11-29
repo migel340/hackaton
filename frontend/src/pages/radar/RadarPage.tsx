@@ -38,23 +38,14 @@ const RadarPage = () => {
   );
 
   return (
-    <div className="fixed inset-0 ml-64 flex flex-col">
-      {/* Header */}
+    <div className="fixed inset-0 ml-64">
+      {/* Header - absolute positioned */}
       <div className="absolute top-4 left-4 z-10">
         <RadarHeader
           userSignal={data.user_signal}
           userSignals={userSignals}
           selectedUserSignalId={selectedUserSignalId}
           onUserSignalChange={setSelectedUserSignalId}
-        />
-      </div>
-
-      {/* Filter buttons */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-        <RadarFilterButtons
-          matches={data.matches}
-          filterType={filterType}
-          onFilterChange={setFilterType}
         />
       </div>
 
@@ -65,8 +56,15 @@ const RadarPage = () => {
         onSignalClick={setSelectedSignal}
         className="w-full h-full"
       />
+
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+        <RadarFilterButtons
+          matches={data.matches}
+          filterType={filterType}
+          onFilterChange={setFilterType}
+        />
+      </div>
       
-      {/* Matches List - slide out panel positioned to not overlap controls */}
       <div className="absolute right-0 top-20 bottom-24 flex items-stretch">
         <MatchesList matches={filteredMatches} onSignalClick={setSelectedSignal} />
       </div>
