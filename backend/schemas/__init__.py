@@ -1,8 +1,8 @@
-from .activity import (
-    UserActivitiesResponse,
-    UserActivityCreate,
-    UserActivityResponse,
-    UserActivityUpdate,
+from .signal import (
+    UserSignalCreate,
+    UserSignalResponse,
+    UserSignalsResponse,
+    UserSignalUpdate,
 )
 from .user import (
     Token,
@@ -22,8 +22,8 @@ __all__ = [
     "UserList",
     "Token",
     "TokenData",
-    "UserActivityCreate",
-    "UserActivityUpdate",
-    "UserActivityResponse",
-    "UserActivitiesResponse",
+    "UserSignalCreate",
+    "UserSignalUpdate",
+    "UserSignalResponse",
+    "UserSignalsResponse",
 ]
