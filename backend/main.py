@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from routers import activities as activities_router
 from routers import auth as auth_router
 from routers import users as users_router
 from services.db import create_db_and_tables
@@ -46,4 +47,5 @@ def health_check():
 # Register routers (mounted under /api/v1)
 app.include_router(auth_router.router, prefix="/api/v1")
 app.include_router(users_router.router, prefix="/api/v1")
+app.include_router(activities_router.router, prefix="/api/v1")
 
