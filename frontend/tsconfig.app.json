@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["src/components/*"],
+      "@components": ["src/components/index.ts"],
+      "@api": ["src/api/index.ts"],
+      "@api/*": ["src/api/*"],
+      "@layouts/*": ["src/layouts/*"],
+      "@layouts": ["src/layouts/index.ts"],
+      "@router/*": ["src/router/*"],
+      "@router": ["src/router/index.ts"],
+      "@utils/*": ["src/utils/*"],
+      "@utils": ["src/utils/index.ts"],
+      "@hooks/*": ["src/hooks/*"],
+      "@hooks": ["src/hooks/index.ts"],
+      "@styles/*": ["src/styles/*"],
+      "@styles": ["src/styles/index.ts"],
+      "@pages/*": ["src/pages/*"],
+      "@pages": ["src/pages/index.ts"],
+      "@/*": ["./src/*"]
+    } 
+
+  },
+  "include": ["src"]
+}
