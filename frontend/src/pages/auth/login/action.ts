@@ -36,13 +36,9 @@ export async function action({ request }: ActionFunctionArgs) {
   try {
     const res = await login(email, password, { remember });
 
-<<<<<<< HEAD
     console.log("Login response:", res);
 
     if (res &&  res.access_token) {
-=======
-    if (res && (res.ok || res.token)) {
->>>>>>> 9f5e3f277cd0c8070cecf85ac21996cb6a512e45
       const url = new URL(request.url);
       const redirectParam =
         redirectToRaw || url.searchParams.get("redirectTo") || "/dashboard";
