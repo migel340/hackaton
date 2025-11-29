@@ -1,13 +1,23 @@
-import { api } from "./api";
+import { api, authToken } from "./api";
+
+export type User = {
+  id: string;
+  email: string;
+  name?: string;
+};
 
 export type LoginResult = {
   ok?: boolean;
   token?: string;
-  user?: {
-    id: string;
-    email: string;
-    name?: string;
-  };
+  accessToken?: string;
+  refreshToken?: string;
+  user?: User;
+  message?: string;
+};
+
+export type AuthResponse = {
+  ok: boolean;
+  user?: User;
   message?: string;
 };
 
@@ -16,22 +26,63 @@ export async function login(
   password: string,
   opts?: { remember?: boolean }
 ): Promise<LoginResult> {
-  // Zakładamy endpoint POST /api/auth/login oraz cookies (credentials: include)
   const result = await api.post<LoginResult>("auth/login", {
     email,
     password,
-    remember: !!opts?.remember,
   });
+
+  // Zapisz tokeny JWT po udanym logowaniu
+  const token = result.accessToken || result.token;
+  if (token) {
+    authToken.set(token, opts?.remember);
+    if (result.refreshToken) {
+      authToken.setRefresh(result.refreshToken, opts?.remember);
+    }
+  }
+
   return result;
 }
 
 export async function logout(): Promise<{ ok: boolean }> {
-  return api.post<{ ok: boolean }>("auth/logout");
+  try {
+    const result = await api.post<{ ok: boolean }>("auth/logout");
+    return result;
+  } finally {
+    authToken.clear();
+  }
 }
 
-export async function me(): Promise<{
-  ok: boolean;
-  user?: LoginResult["user"];
-}> {
-  return api.get<{ ok: boolean; user?: LoginResult["user"] }>("auth/me");
+export async function me(): Promise<AuthResponse> {
+  return api.get<AuthResponse>("auth/me");
+}
+
+export async function register(
+  email: string,
+  password: string,
+  name?: string
+): Promise<LoginResult> {
+  const result = await api.post<LoginResult>("auth/register", {
+    email,
+    password,
+    name,
+  });
+
+  // Opcjonalnie: automatyczne logowanie po rejestracji
+  const token = result.accessToken || result.token;
+  if (token) {
+    authToken.set(token, false);
+    if (result.refreshToken) {
+      authToken.setRefresh(result.refreshToken, false);
+    }
+  }
+
+  return result;
+}
+
+export function isAuthenticated(): boolean {
+  return !!authToken.get();
+}
+
+export function getAuthToken(): string | null {
+  return authToken.get();
 }
