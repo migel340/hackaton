@@ -1,6 +1,5 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router";
 import LoginPage from "@/pages/auth/login/LoginPage";
-import App from "@/App";
 import MainLayout from "@layouts/MainLayout";
 
 export const router = createBrowserRouter([
@@ -51,5 +50,4 @@ export const router = createBrowserRouter([
         ],
     },
 ]);
-
 
