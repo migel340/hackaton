@@ -35,3 +35,30 @@ export async function me(): Promise<{
 }> {
   return api.get<{ ok: boolean; user?: LoginResult["user"] }>("auth/me");
 }
+
+export async function registerUser(payload: {
+  name: string;
+  email: string;
+  password: string;
+}) {
+  // Dopasuj do istniejącego klienta/api.ts jeśli jest wspólny fetch.
+  const res = await fetch("/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const msg = await safeMessage(res);
+    throw new Error(msg || "Rejestracja nie powiodła się");
+  }
+  return res.json();
+}
+
+async function safeMessage(res: Response) {
+  try {
+    const data = await res.json();
+    return data?.message;
+  } catch {
+    return null;
+  }
+}
