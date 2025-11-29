@@ -2,9 +2,9 @@ services:
   postgres:
     image: postgres:17
     environment:
-      POSTGRES_USER: hackaton_user
-      POSTGRES_PASSWORD: hackaton_passwd
-      POSTGRES_DB: hackaton_db
+      POSTGRES_USER: {{POSTGRES_USER:-hackaton_user}}
+      POSTGRES_PASSWORD: {{POSTGRES_PASSWORD:-hackaton_passwd}}
+      POSTGRES_DB: {{POSTGRES_DB:-hackaton_db}}
     ports:
       - "5432:5432"
     volumes:
