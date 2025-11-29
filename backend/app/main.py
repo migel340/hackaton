@@ -33,13 +33,12 @@ app.add_middleware(
 
 @app.get("/api/v1")
 def read_root():
-    return {"message": ""}
+    return {"message": "XD"}
 
 
 @app.get("/api/v1/health")
 def health_check():
     return {"status": "ok"}
-
 
 
 

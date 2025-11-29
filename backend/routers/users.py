@@ -15,7 +15,7 @@ def get_users(session: Session = Depends(get_session)):
 
 @router.post("/")
 def create_user(user: User, session: Session = Depends(get_session)):
-    existing = session.exec(select(User).where(User.username == user.username)).first()
+    existing = session.exec(select(User).where(User.id == user.id)).first()
     if existing:
         raise HTTPException(status_code=400, detail="username already exists")
     session.add(user)
