@@ -258,6 +258,10 @@ def match_all_signals(
     total_matches = 0
     
     for source_signal in user_signals:
+        # Pomiń sygnały bez ID (nie powinno się zdarzyć)
+        if source_signal.id is None:
+            continue
+            
         # Pobierz kategorie które pasują do tego sygnału
         matching_category_ids = get_matching_category_ids(source_signal.signal_category_id)
         
