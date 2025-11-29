@@ -46,8 +46,8 @@ resolvelib==1.2.0
 rich==14.2.0
 rich-toolkit==0.17.0
 rignore==0.7.6
-ruamel.yaml==0.18.15
-ruamel.yaml.clib==0.2.12
+# ruamel.yaml==0.18.15  # Temporarily disabled - not compatible with Python 3.14
+# ruamel.yaml.clib==0.2.12  # Temporarily disabled - not compatible with Python 3.14
 sentry-sdk==2.46.0
 setuptools==80.9.0
 shellingham==1.5.4
