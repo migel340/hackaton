@@ -89,7 +89,7 @@ export const authToken = {
 
 // ---------- Axios Instance ----------
 const axiosInstance: AxiosInstance = axios.create({
-  baseURL: API_BASE,
+  baseURL: "/local/api/v1",
   withCredentials: true,
   headers: {
     Accept: "application/json",
@@ -109,7 +109,6 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ---------- Refresh handling ----------
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (token: string | null) => void;

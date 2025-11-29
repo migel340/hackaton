@@ -1,5 +1,5 @@
-import { json, type ActionFunctionArgs } from "react-router-dom";
 import { login } from "../../../api/auth";
+import type { ActionFunctionArgs } from "react-router";
 
 type ActionData = {
   ok?: boolean;
@@ -30,27 +30,27 @@ export async function action({ request }: ActionFunctionArgs) {
   else if (password.length < 6) fieldErrors.password = "Min. 6 znaków.";
 
   if (fieldErrors.email || fieldErrors.password) {
-    return json<ActionData>({ ok: false, fieldErrors }, { status: 400 });
+    return { ok: false, fieldErrors } satisfies ActionData;
   }
 
   try {
     const res = await login(email, password, { remember });
 
-    if (res && (res.ok || res.token)) {
+    console.log("Login response:", res);
+
+    if (res &&  res.access_token) {
       const url = new URL(request.url);
       const redirectParam =
         redirectToRaw || url.searchParams.get("redirectTo") || "/dashboard";
 
-      return json<ActionData>(
-        { ok: true, redirectTo: redirectParam },
-        { status: 200 }
-      );
+      return { ok: true, redirectTo: redirectParam } satisfies ActionData;
     }
 
     const message = res?.message || "Logowanie nie powiodło się.";
-    return json<ActionData>({ ok: false, message }, { status: 401 });
-  } catch (e: any) {
-    const message = e?.message || "Wystąpił błąd podczas logowania.";
-    return json<ActionData>({ ok: false, message }, { status: 500 });
+    return { ok: false, message } satisfies ActionData;
+  } catch (e: unknown) {
+    const message =
+      e instanceof Error ? e.message : "Wystąpił błąd podczas logowania.";
+    return { ok: false, message } satisfies ActionData;
   }
 }
