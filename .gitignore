@@ -225,3 +225,4 @@ frontend/*.local
 frontend/.vite/deps/_metadata.json
 .idea/
 test.db
+postgres_data

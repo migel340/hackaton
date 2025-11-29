@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 import os
 
 
-# Load .env file if present
-load_dotenv(Path(".env"))
+# Load .env file if present (from backend/.env)
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 
 class Settings:
