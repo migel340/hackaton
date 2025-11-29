@@ -1,7 +1,7 @@
-from sqlmodel import select, Session
+from sqlmodel import Session, select
 
-from backend.services.db import create_db_and_tables, get_engine, get_session
-from backend.models.user import User
+from models.user import User
+from services.db import create_db_and_tables, get_engine, get_session
 
 
 def main():

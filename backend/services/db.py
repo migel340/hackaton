@@ -1,14 +1,12 @@
 from typing import Generator
 
-from sqlmodel import Session, create_engine, SQLModel
+from sqlmodel import Session, SQLModel, create_engine
 
-
-from backend.app.config import settings
-from backend.models.user import User  # noqa: F401 - needed for SQLModel.metadata
-
+from config import settings
+from models.user import User  # noqa: F401 - needed for SQLModel.metadata
 
 # Database URL from env via config, fallback to sqlite
-DATABASE_URL = settings.DATABASE_URL or "sqlite:///./test.db"
+DATABASE_URL = settings.DATABASE_URL
 
 # Engine (shared)
 engine = create_engine(DATABASE_URL, echo=bool(settings.DEBUG))
@@ -29,4 +27,10 @@ def get_session() -> Generator[Session, None, None]:
         yield session
 
 
-__all__ = ["engine", "DATABASE_URL", "create_db_and_tables", "get_engine", "get_session"]
+__all__ = [
+    "engine",
+    "DATABASE_URL",
+    "create_db_and_tables",
+    "get_engine",
+    "get_session",
+]
