@@ -5,6 +5,7 @@ from sqlmodel import Session, col, select
 from models.signal import UserSignal
 from models.user import User
 from schemas.signal import (
+    SignalMatchAllResponse,
     SignalMatchResponse,
     UserSignalCreate,
     UserSignalResponse,
@@ -221,4 +222,103 @@ def match_signals(
     return {
         "source_signal_id": signal_id,
         "matches": matches
+    }
+
+
+@router.get("/match-all", response_model=SignalMatchAllResponse)
+def match_all_signals(
+    min_accurate: float = 0,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Znajdź dopasowania dla WSZYSTKICH sygnałów użytkownika naraz.
+    
+    - **min_accurate**: Minimalny próg dopasowania (0-100), domyślnie 0
+    
+    Zwraca wszystkie dopasowania pogrupowane po sygnałach źródłowych.
+    """
+    # Pobierz wszystkie aktywne sygnały użytkownika
+    user_signals = session.exec(
+        select(UserSignal).where(
+            UserSignal.user_id == current_user.id,
+            UserSignal.is_active == True  # noqa: E712
+        )
+    ).all()
+    
+    if not user_signals:
+        return {
+            "user_id": current_user.id,
+            "total_signals": 0,
+            "total_matches": 0,
+            "results": []
+        }
+    
+    results = []
+    total_matches = 0
+    
+    for source_signal in user_signals:
+        # Pomiń sygnały bez ID (nie powinno się zdarzyć)
+        if source_signal.id is None:
+            continue
+            
+        # Pobierz kategorie które pasują do tego sygnału
+        matching_category_ids = get_matching_category_ids(source_signal.signal_category_id)
+        
+        if not matching_category_ids:
+            results.append({
+                "source_signal_id": source_signal.id,
+                "matches": []
+            })
+            continue
+        
+        # Pobierz sygnały z pasujących kategorii (nie własne)
+        target_signals = session.exec(
+            select(UserSignal).where(
+                col(UserSignal.signal_category_id).in_(matching_category_ids),
+                UserSignal.user_id != current_user.id,
+                UserSignal.is_active == True  # noqa: E712
+            )
+        ).all()
+        
+        if not target_signals:
+            results.append({
+                "source_signal_id": source_signal.id,
+                "matches": []
+            })
+            continue
+        
+        # Przygotuj dane do matchowania
+        target_data = [
+            {"id": sig.id, "details": sig.details}
+            for sig in target_signals
+        ]
+        
+        # Oblicz dopasowanie przez OpenAI
+        matches = calculate_bulk_signal_matches(
+            source_signal_id=source_signal.id,
+            source_details=source_signal.details,
+            target_signals=target_data
+        )
+        
+        # Filtruj po min_accurate
+        filtered_matches = [
+            m for m in matches if m["accurate"] >= min_accurate
+        ]
+        
+        # Sortuj po accurate malejąco
+        filtered_matches.sort(key=lambda x: x["accurate"], reverse=True)
+        
+        total_matches += len(filtered_matches)
+        
+        results.append({
+            "source_signal_id": source_signal.id,
+            "matches": filtered_matches
+        })
+    
+    return {
+        "user_id": current_user.id,
+        "total_signals": len(user_signals),
+        "total_matches": total_matches,
+        "results": results
     }

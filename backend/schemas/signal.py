@@ -74,6 +74,14 @@ class SignalMatchResponse(BaseModel):
     matches: list[SignalMatchResult]
 
 
+class SignalMatchAllResponse(BaseModel):
+    """Odpowiedź dla match-all - wszystkie sygnały użytkownika z dopasowaniami"""
+    user_id: int
+    total_signals: int
+    total_matches: int
+    results: list[SignalMatchResponse]
+
+
 __all__ = [
     "UserSignalCreate",
     "UserSignalUpdate", 
@@ -82,4 +90,5 @@ __all__ = [
     "SignalCategoryResponse",
     "SignalMatchResult",
     "SignalMatchResponse",
+    "SignalMatchAllResponse",
 ]
