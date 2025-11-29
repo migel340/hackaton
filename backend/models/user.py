@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, SQLModel
 
 
 class User(SQLModel, table=True):
@@ -13,5 +13,6 @@ class User(SQLModel, table=True):
     hashed_password: str  # Hasło w formie zahashowanej
     is_active: bool = Field(default=False)
     created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
+
 
 __all__ = ["User"]

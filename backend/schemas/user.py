@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
@@ -17,7 +16,7 @@ class UserCreate(UserBase):
 
 # Schema do logowania
 class UserLogin(BaseModel):
-    username: str
+    email: EmailStr
     password: str
 
 

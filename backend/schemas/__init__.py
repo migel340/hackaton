@@ -1,3 +1,9 @@
+from .signal import (
+    UserSignalCreate,
+    UserSignalResponse,
+    UserSignalsResponse,
+    UserSignalUpdate,
+)
 from .user import (
     Token,
     TokenData,
@@ -16,4 +22,8 @@ __all__ = [
     "UserList",
     "Token",
     "TokenData",
+    "UserSignalCreate",
+    "UserSignalUpdate",
+    "UserSignalResponse",
+    "UserSignalsResponse",
 ]
