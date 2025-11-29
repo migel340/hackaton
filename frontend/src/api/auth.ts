@@ -16,7 +16,6 @@ export async function login(
   password: string,
   opts?: { remember?: boolean }
 ): Promise<LoginResult> {
-  // Zakładamy endpoint POST /api/auth/login oraz cookies (credentials: include)
   const result = await api.post<LoginResult>("auth/login", {
     email,
     password,
@@ -41,7 +40,6 @@ export async function registerUser(payload: {
   email: string;
   password: string;
 }) {
-  // Dopasuj do istniejącego klienta/api.ts jeśli jest wspólny fetch.
   const res = await fetch("/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
