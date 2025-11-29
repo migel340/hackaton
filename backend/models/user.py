@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import ClassVar, Optional
 
 from sqlmodel import Field, SQLModel
 
 
 class User(SQLModel, table=True):
-    __tablename__ = "user"
+    __tablename__: ClassVar[str] = "user"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(index=True, unique=True)
