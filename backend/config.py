@@ -1,24 +1,19 @@
 from pathlib import Path
-from pydantic import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
+import os
 
 
-class Settings(BaseSettings):
-		"""Application settings loaded from environment variables or a `.env` file.
+# Load .env file if present
+load_dotenv(Path(".env"))
 
-		Usage:
-			- Put variables in a `.env` file at the project root, or export them in the environment.
-			- Access values via the `settings` instance below, e.g. `settings.DATABASE_URL`.
-		"""
 
-		APP_NAME: str = "hackaton"
-		DEBUG: bool = False
-		DATABASE_URL: str | None = None
-		SECRET_KEY: str = "change-me"
+class Settings:
+    """Simple settings holder that reads values from environment variables."""
 
-		model_config = SettingsConfigDict(
-				env_file=Path(".env"),
-				env_file_encoding="utf-8",
-		)
+    APP_NAME: str = os.getenv("APP_NAME", "hackaton")
+    DEBUG: bool = os.getenv("DEBUG", "false").lower() in ("1", "true", "yes")
+    DATABASE_URL: str | None = os.getenv("DATABASE_URL")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me")
 
 
 settings = Settings()
