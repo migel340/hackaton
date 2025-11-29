@@ -5,6 +5,7 @@ import MainLayout from "@layouts/MainLayout";
 import { action as loginAction } from "@/pages/auth/login/action";
 import { isAuthenticated } from "@/api/auth";
 import AddSignalPage from "@/pages/signals/add/AddSignalPage";
+import RadarPage from "@/pages/radar/RadarPage";
 
 function redirectIfAuthenticated() {
   if (isAuthenticated()) {
@@ -58,6 +59,10 @@ export const router = createBrowserRouter([
       {
         path: "/signals/add",
         element: <AddSignalPage />,
+      },
+      {
+        path: "/radar",
+        element: <RadarPage />,
       },
       {
         path: "/settings",

@@ -5,6 +5,7 @@ const MainMenu = () => {
 
   const menuItems = [
     { path: "/", label: "Home", icon: "🏠" },
+    { path: "/radar", label: "Radar", icon: "🎯" },
     { path: "/signals", label: "Sygnały", icon: "📡" },
     { path: "/signals/add", label: "Dodaj sygnał", icon: "➕" },
     { path: "/settings", label: "Settings", icon: "⚙️" },
