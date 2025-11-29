@@ -5,7 +5,6 @@ import MainLayout from "@layouts/MainLayout";
 import { action as loginAction } from "@/pages/auth/login/action";
 import { isAuthenticated } from "@/api/auth";
 
-// Loader który przekierowuje zalogowanych użytkowników na stronę główną
 function redirectIfAuthenticated() {
   if (isAuthenticated()) {
     return redirect("/");
@@ -13,7 +12,6 @@ function redirectIfAuthenticated() {
   return null;
 }
 
-// Loader który przekierowuje niezalogowanych użytkowników na stronę logowania
 function requireAuth() {
   if (!isAuthenticated()) {
     return redirect("/login");
@@ -48,7 +46,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/dashboard",
+        path: "/signals",
         element: (
           <div>
             <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
