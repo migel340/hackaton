@@ -32,10 +32,11 @@ def get_users(
 def get_user(
     user_id: int,
     session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user),  # Wymaga autentykacji
 ):
     """
-    Pobierz użytkownika po ID (wymaga autentykacji).
+    Pobierz użytkownika po ID (publiczny endpoint).
+    
+    Nie wymaga autoryzacji - pozwala przeglądać profile innych użytkowników.
     """
     user = session.get(User, user_id)
     if not user:

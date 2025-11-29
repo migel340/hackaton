@@ -17,7 +17,7 @@ class UserCreate(UserBase):
 
 # Schema do logowania
 class UserLogin(BaseModel):
-    username: str
+    email: EmailStr
     password: str
 
 
