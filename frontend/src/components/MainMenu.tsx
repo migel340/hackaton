@@ -4,12 +4,8 @@ const MainMenu = () => {
   const location = useLocation();
 
   const menuItems = [
-    { path: "/", label: "Home", icon: "🏠" },
-    { path: "/radar", label: "Radar", icon: "🎯" },
-    { path: "/signals", label: "Sygnały", icon: "📡" },
+    { path: "/", label: "Radar", icon: "🎯" },
     { path: "/signals/add", label: "Dodaj sygnał", icon: "➕" },
-    { path: "/settings", label: "Settings", icon: "⚙️" },
-    { path: "/profile", label: "Profile", icon: "👤" },
   ];
 
   return (

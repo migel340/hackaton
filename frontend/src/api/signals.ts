@@ -203,18 +203,94 @@ function generateMockMatches(): MatchedSignalsResponse {
   };
 }
 
+// Mock dla wielu sygnałów użytkownika
+function generateMockUserSignals(): Signal[] {
+  return [
+    {
+      id: "user-signal-1",
+      type: "investor",
+      title: "Inwestor FinTech",
+      match_score: 1.0,
+      user_id: "current-user",
+      username: "Ty",
+      metadata: {
+        description: "Szukam innowacyjnych startupów w branży FinTech",
+        budget_min: 50000,
+        budget_max: 200000,
+        categories: ["fintech", "saas"],
+      },
+    },
+    {
+      id: "user-signal-2",
+      type: "freelancer",
+      title: "React Developer",
+      match_score: 1.0,
+      user_id: "current-user",
+      username: "Ty",
+      metadata: {
+        description: "Senior React/TypeScript developer szukający projektów",
+        hourly_rate: 150,
+        skills: ["react", "typescript", "nodejs"],
+        categories: ["saas", "fintech"],
+      },
+    },
+    {
+      id: "user-signal-3",
+      type: "idea",
+      title: "Platforma EdTech",
+      match_score: 1.0,
+      user_id: "current-user",
+      username: "Ty",
+      metadata: {
+        description: "Innowacyjna platforma do nauki programowania z AI",
+        funding_min: 100000,
+        funding_max: 250000,
+        categories: ["edtech", "ai_ml"],
+        needed_skills: ["frontend", "backend", "data_science"],
+      },
+    },
+  ];
+}
+
+/**
+ * Pobiera wszystkie sygnały (aktywności) zalogowanego użytkownika
+ */
+export async function getUserSignals(): Promise<Signal[]> {
+  try {
+    // TODO: Zamienić na prawdziwe API
+    // return await api.get<Signal[]>("/signals/my");
+    
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return generateMockUserSignals();
+  } catch (error) {
+    console.error("Error fetching user signals:", error);
+    throw error;
+  }
+}
+
 /**
  * Pobiera dopasowane sygnały dla zalogowanego użytkownika
  * Sygnał użytkownika jest w środku radaru, reszta rozmieszczona według match_score
  */
-export async function getMatchedSignals(): Promise<MatchedSignalsResponse> {
+export async function getMatchedSignals(userSignalId?: string): Promise<MatchedSignalsResponse> {
   try {
     // TODO: Zamienić na prawdziwe API gdy endpoint będzie gotowy
-    // return await api.get<MatchedSignalsResponse>("/signals/matches");
+    // return await api.get<MatchedSignalsResponse>(`/signals/matches?signal_id=${userSignalId}`);
     
     // Tymczasowo używamy mock data
     await new Promise(resolve => setTimeout(resolve, 500)); // Symulacja opóźnienia sieci
-    return generateMockMatches();
+    const mockData = generateMockMatches();
+    
+    // Jeśli podano ID sygnału użytkownika, znajdź go
+    if (userSignalId) {
+      const userSignals = generateMockUserSignals();
+      const selectedSignal = userSignals.find(s => s.id === userSignalId);
+      if (selectedSignal) {
+        mockData.user_signal = selectedSignal;
+      }
+    }
+    
+    return mockData;
   } catch (error) {
     console.error("Error fetching matched signals:", error);
     throw error;
