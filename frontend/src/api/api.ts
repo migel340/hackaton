@@ -1,6 +1,11 @@
-import axios from "axios";
+import axios, {
+  AxiosError,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type InternalAxiosRequestConfig,
+} from "axios";
 
-// Klient API z JWT (Bearer), auto-refresh po 401 i retry.
+// ---------- Custom Error ----------
 export class ApiError extends Error {
   status: number;
   body: unknown;
@@ -12,38 +17,30 @@ export class ApiError extends Error {
   }
 }
 
-type ApiRequestOptions = {
-  method?: string;
-  headers?: Record<string, string>;
-  body?: any;
-  credentials?: RequestCredentials;
-  signal?: AbortSignal;
-  auth?: boolean;
-  retryOn401?: boolean;
-};
-
-// Konfiguracja bazowego URL
+// ---------- Konfiguracja bazowego URL ----------
 const API_BASE =
   (typeof import.meta !== "undefined" &&
     (import.meta as any)?.env?.VITE_API_BASE) ||
   "/api";
 
-function buildUrl(path: string): string {
-  if (/^https?:\/\//i.test(path)) return path;
-  const base = String(API_BASE).replace(/\/$/, "");
-  const p = String(path).replace(/^\//, "");
-  return `${base}/${p}`;
-}
-
 // ---------- Token storage ----------
 const TOKEN_KEY_LOCAL = "auth_token";
 const TOKEN_KEY_SESSION = "auth_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
 let tokenPersist: "local" | "session" | null = null;
 
 function getStoredToken(): string | null {
   return (
     localStorage.getItem(TOKEN_KEY_LOCAL) ||
     sessionStorage.getItem(TOKEN_KEY_SESSION) ||
+    null
+  );
+}
+
+function getStoredRefreshToken(): string | null {
+  return (
+    localStorage.getItem(REFRESH_TOKEN_KEY) ||
+    sessionStorage.getItem(REFRESH_TOKEN_KEY) ||
     null
   );
 }
@@ -59,8 +56,17 @@ function setStoredToken(token: string, remember?: boolean) {
   }
 }
 
+function setStoredRefreshToken(token: string, remember?: boolean) {
+  if (remember) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, token);
+    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+  } else {
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, token);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  }
+}
+
 function overwriteStoredToken(token: string) {
-  // użyj tego samego trybu pamięci co poprzednio
   const remember = tokenPersist === "local";
   setStoredToken(token, remember);
 }
@@ -68,137 +74,192 @@ function overwriteStoredToken(token: string) {
 function clearStoredToken() {
   localStorage.removeItem(TOKEN_KEY_LOCAL);
   sessionStorage.removeItem(TOKEN_KEY_SESSION);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  sessionStorage.removeItem(REFRESH_TOKEN_KEY);
   tokenPersist = null;
 }
 
 export const authToken = {
   get: getStoredToken,
   set: setStoredToken,
+  setRefresh: setStoredRefreshToken,
+  getRefresh: getStoredRefreshToken,
   clear: clearStoredToken,
 };
 
-// ---------- Refresh handling ----------
-let refreshPromise: Promise<string | null> | null = null;
+// ---------- Axios Instance ----------
+const axiosInstance: AxiosInstance = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true,
+  headers: {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  },
+});
 
-async function parseJsonSafe(res: Response) {
-  const text = await res.text();
-  try {
-    return text ? JSON.parse(text) : null;
-  } catch {
-    return text || null;
-  }
+// ---------- Request Interceptor (dodaje token JWT) ----------
+axiosInstance.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = getStoredToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ---------- Refresh handling ----------
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string | null) => void;
+  reject: (error: unknown) => void;
+}> = [];
+
+function processQueue(error: unknown, token: string | null = null) {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve(token);
+    }
+  });
+  failedQueue = [];
 }
 
 async function refreshAccessToken(): Promise<string | null> {
-  // Założenie: backend udostępnia POST /auth/refresh i zwraca { token } lub { accessToken }
-  const url = buildUrl("auth/refresh");
-  const res = await fetch(url, {
-    method: "POST",
-    credentials: "include",
-    headers: { Accept: "application/json" },
-  });
-  const data = await parseJsonSafe(res);
-  if (!res.ok) return null;
+  try {
+    const refreshToken = getStoredRefreshToken();
+    const response = await axios.post(
+      `${API_BASE}/auth/refresh`,
+      { refreshToken },
+      { withCredentials: true }
+    );
 
-  const token = (data && (data.accessToken || data.token)) || null;
-  if (token) overwriteStoredToken(token);
-  return token;
-}
+    const data = response.data;
+    const newToken = data?.accessToken || data?.token || null;
+    const newRefreshToken = data?.refreshToken;
 
-async function ensureRefreshed(): Promise<string | null> {
-  if (!refreshPromise) {
-    refreshPromise = refreshAccessToken().finally(() => {
-      refreshPromise = null;
-    });
+    if (newToken) {
+      overwriteStoredToken(newToken);
+      if (newRefreshToken) {
+        setStoredRefreshToken(newRefreshToken, tokenPersist === "local");
+      }
+    }
+
+    return newToken;
+  } catch {
+    clearStoredToken();
+    return null;
   }
-  return refreshPromise;
 }
 
-// ---------- Request core ----------
+// ---------- Response Interceptor (obsługa 401 i auto-refresh) ----------
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
+    // Jeśli 401 i nie jest to retry
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Czekaj na zakończenie odświeżania
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            if (token && originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            return axiosInstance(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          processQueue(null, newToken);
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          }
+          return axiosInstance(originalRequest);
+        } else {
+          processQueue(new Error("Refresh token failed"), null);
+          // Przekieruj do logowania lub wyczyść stan
+          clearStoredToken();
+          window.location.href = "/login";
+          return Promise.reject(error);
+        }
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        clearStoredToken();
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    // Konwertuj błąd axios na ApiError
+    const status = error.response?.status || 500;
+    const data = error.response?.data as Record<string, unknown> | undefined;
+    const message =
+      (data?.message as string) ||
+      (data?.error as string) ||
+      error.message ||
+      `Request failed with status ${status}`;
+
+    return Promise.reject(new ApiError(message, status, data));
+  }
+);
+
+// ---------- API methods ----------
+export interface ApiRequestOptions extends Omit<AxiosRequestConfig, "auth"> {
+  auth?: boolean;
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
   options: ApiRequestOptions = {}
 ): Promise<T> {
-  const url = buildUrl(path);
+  const { auth = true, ...axiosOptions } = options;
 
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    ...(options.headers || {}),
-  };
-
-  let body = options.body;
-
-  // JSON body
-  if (body && !(body instanceof FormData)) {
-    headers["Content-Type"] = headers["Content-Type"] || "application/json";
-    body = typeof body === "string" ? body : JSON.stringify(body);
+  // Jeśli auth jest false, usuń token z tego requestu
+  if (!auth && axiosOptions.headers) {
+    delete (axiosOptions.headers as Record<string, unknown>)["Authorization"];
   }
 
-  // Bearer token
-  const useAuth = options.auth !== false;
-  if (useAuth) {
-    const token = getStoredToken();
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  const res = await fetch(url, {
-    method: options.method || "GET",
-    headers,
-    body,
-    credentials: options.credentials ?? "include",
-    signal: options.signal,
+  const response = await axiosInstance.request<T>({
+    url: path,
+    ...axiosOptions,
   });
 
-  // Obsługa 401 -> refresh -> retry (jeden raz)
-  const allowRetry = options.retryOn401 ?? true;
-  if (res.status === 401 && allowRetry && useAuth) {
-    const newToken = await ensureRefreshed();
-    if (newToken) {
-      // ponowne wywołanie z nowym tokenem
-      const retriedHeaders = {
-        ...headers,
-        Authorization: `Bearer ${newToken}`,
-      };
-      const retryRes = await fetch(url, {
-        method: options.method || "GET",
-        headers: retriedHeaders,
-        body,
-        credentials: options.credentials ?? "include",
-        signal: options.signal,
-      });
-      const retryData = await parseJsonSafe(retryRes);
-      if (!retryRes.ok) {
-        const message =
-          (retryData && (retryData.message || retryData.error)) ||
-          `Request failed with status ${retryRes.status}`;
-        throw new ApiError(String(message), retryRes.status, retryData);
-      }
-      return retryData as T;
-    }
-  }
-
-  const data = await parseJsonSafe(res);
-  if (!res.ok) {
-    const message =
-      (data && (data.message || data.error)) ||
-      `Request failed with status ${res.status}`;
-    throw new ApiError(String(message), res.status, data);
-  }
-
-  return data as T;
+  return response.data;
 }
 
 export const api = {
   get<T = unknown>(path: string, opts?: ApiRequestOptions) {
-    return apiFetch<T>(path, { ...(opts || {}), method: "GET" });
+    return apiFetch<T>(path, { ...opts, method: "GET" });
   },
-  post<T = unknown>(path: string, body?: any, opts?: ApiRequestOptions) {
-    return apiFetch<T>(path, { ...(opts || {}), method: "POST", body });
+  post<T = unknown>(path: string, body?: unknown, opts?: ApiRequestOptions) {
+    return apiFetch<T>(path, { ...opts, method: "POST", data: body });
   },
-  put<T = unknown>(path: string, body?: any, opts?: ApiRequestOptions) {
-    return apiFetch<T>(path, { ...(opts || {}), method: "PUT", body });
+  put<T = unknown>(path: string, body?: unknown, opts?: ApiRequestOptions) {
+    return apiFetch<T>(path, { ...opts, method: "PUT", data: body });
+  },
+  patch<T = unknown>(path: string, body?: unknown, opts?: ApiRequestOptions) {
+    return apiFetch<T>(path, { ...opts, method: "PATCH", data: body });
   },
   del<T = unknown>(path: string, opts?: ApiRequestOptions) {
-    return apiFetch<T>(path, { ...(opts || {}), method: "DELETE" });
+    return apiFetch<T>(path, { ...opts, method: "DELETE" });
   },
 };
+
+// Eksport instancji axios dla zaawansowanych przypadków
+export { axiosInstance };
