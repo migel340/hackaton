@@ -1,27 +1,25 @@
 # routers/categories.py
-from typing import Annotated, Optional, List
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
-from models.category import Category, CategoryType
-from services.db import get_session
-from services.dependencies import get_current_user  # usuń, jeśli CRUD ma być publiczny
-
+from models.category import Category
 from schemas.category import (
-    CategoryCreate,
-    CategoryUpdate,
-    CategoryResponse,
     CategoriesResponse,
-    CategoryTypesResponse,
+    CategoryCreate,
+    CategoryResponse,
+    CategoryUpdate,
 )
+from services.db import get_session
+from services.dependencies import get_current_user
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
 SessionDep = Annotated[Session, Depends(get_session)]
-CurrentUserDep = Annotated[object, Depends(get_current_user)]  # podmień na swój User, jeśli chcesz
+CurrentUserDep = Annotated[object, Depends(get_current_user)]
 
 
 # --- CREATE ---
@@ -29,7 +27,6 @@ CurrentUserDep = Annotated[object, Depends(get_current_user)]  # podmień na sw�
 def create_category(
     category_in: CategoryCreate,
     session: SessionDep,
-
 ):
     # pre-check unikalności (case-insensitive), zanim wjedzie UNIQUE(name)
     exists = session.exec(
@@ -38,7 +35,7 @@ def create_category(
     if exists:
         raise HTTPException(status_code=400, detail="Category with this name already exists")
 
-    category = Category(name=category_in.name)
+    category = Category(name=category_in.name, description=category_in.description)
     session.add(category)
     try:
         session.commit()
@@ -60,9 +57,10 @@ def list_categories(
     stmt = select(Category)
     if q:
         stmt = stmt.where(func.lower(Category.name).like(f"%{q.lower()}%"))
-    stmt = stmt.order_by(Category.id).offset(skip).limit(limit)
+    stmt = stmt.order_by(Category.name).offset(skip).limit(limit)
 
-    items: List[Category] = session.exec(stmt).all()
+    categories = session.exec(stmt).all()
+    items = [CategoryResponse.model_validate(c) for c in categories]
     return CategoriesResponse(items=items)
 
 
@@ -81,7 +79,6 @@ def update_category(
     category_id: int,
     category_in: CategoryUpdate,
     session: SessionDep,
-
 ):
     category = session.get(Category, category_id)
     if not category:
@@ -100,6 +97,9 @@ def update_category(
         if exists:
             raise HTTPException(status_code=400, detail="Category with this name already exists")
         category.name = update_data["name"]
+    
+    if "description" in update_data:
+        category.description = update_data["description"]
 
     session.add(category)
     try:
@@ -116,7 +116,6 @@ def update_category(
 def delete_category(
     category_id: int,
     session: SessionDep,
-
 ):
     category = session.get(Category, category_id)
     if not category:
@@ -124,9 +123,3 @@ def delete_category(
     session.delete(category)
     session.commit()
     return None
-
-
-# --- TYPES (Enum) ---
-@router.get("/types", response_model=CategoryTypesResponse)
-def get_category_types():
-    return CategoryTypesResponse(types=[t.value for t in CategoryType])
