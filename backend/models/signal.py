@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
-from sqlmodel import Field, SQLModel
+from sqlalchemy.dialects.postgresql import JSON
+from sqlmodel import Column, Field, SQLModel
 
 
-class SignalType(str, Enum):
-    """Typy sygnałów użytkownika"""
-    FREELANCER = "FREELANCER"
-    IDEA_CREATOR = "IDEA_CREATOR"  # Pomysłodawca / Idea Creator
-    FUNDATOR = "FUNDATOR"  # Fundator projektu
+class SignalCategory(SQLModel, table=True):
+    """
+    Tabela kategorii sygnałów.
+    Predefiniowane kategorie: FREELANCER, STARTUP_IDEA, INVESTOR
+    """
+    __tablename__ = "signal_category"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True, unique=True)  # FREELANCER, STARTUP_IDEA, INVESTOR
+    label: str = Field(index=True)  # Freelancer, Pomysł na startup, Inwestor
 
 
 class UserSignal(SQLModel, table=True):
@@ -19,15 +24,14 @@ class UserSignal(SQLModel, table=True):
     Tabela sygnałów użytkowników.
     Jeden użytkownik może mieć wiele sygnałów jednocześnie.
     """
+    __tablename__ = "user_signal"
+    
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", index=True)
-    signal_type: SignalType = Field(index=True)
-    category_id: Optional[int] = Field(default=None, foreign_key="category.id", index=True)
+    signal_category_id: int = Field(foreign_key="signal_category.id", index=True)
+    details: Optional[Any] = Field(default=None, sa_column=Column(JSON))  # Dowolny JSON z frontu
     created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
-    is_active: bool = Field(default=True)  # Czy sygnał jest nadal aktywny
-    
-    class Config:
-        use_enum_values = True
+    is_active: bool = Field(default=True)
 
 
-__all__ = ["UserSignal", "SignalType"]
+__all__ = ["UserSignal", "SignalCategory"]
