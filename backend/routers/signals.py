@@ -29,10 +29,12 @@ def add_signal(
     """
     Dodaj nowy sygnał do profilu użytkownika.
     
+    Użytkownik może mieć wiele sygnałów tej samej kategorii (np. kilka pomysłów na startup).
+    
     signal_category_id:
     - 1 = Freelancer
-    - 2 = Pomysłodawca
-    - 3 = Fundator
+    - 2 = Startup Idea
+    - 3 = Investor
     
     details: dowolny JSON (string, lista, obiekt - cokolwiek z frontu)
     """
@@ -41,21 +43,6 @@ def add_signal(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="signal_category_id must be 1, 2, or 3"
-        )
-    
-    # Sprawdź czy użytkownik już ma ten sygnał
-    existing = session.exec(
-        select(UserSignal).where(
-            UserSignal.user_id == current_user.id,
-            UserSignal.signal_category_id == signal_data.signal_category_id,
-            UserSignal.is_active == True  # noqa: E712
-        )
-    ).first()
-    
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"User already has active signal for category: {signal_data.signal_category_id}"
         )
     
     if current_user.id is None:
