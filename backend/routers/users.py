@@ -28,6 +28,77 @@ def get_users(
     return {"users": users, "total": total}
 
 
+@router.get("/me", response_model=UserResponse)
+def get_current_user_profile(
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Pobierz profil aktualnie zalogowanego użytkownika.
+    """
+    return current_user
+
+
+@router.put("/me", response_model=UserResponse)
+def update_current_user_profile(
+    user_update: UserUpdate,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Aktualizuj profil aktualnie zalogowanego użytkownika.
+    """
+    # Aktualizuj tylko podane pola
+    if user_update.username is not None:
+        existing = session.exec(
+            select(User).where(User.username == user_update.username, User.id != current_user.id)
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken"
+            )
+        current_user.username = user_update.username
+    
+    if user_update.email is not None:
+        existing = session.exec(
+            select(User).where(User.email == user_update.email, User.id != current_user.id)
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already taken"
+            )
+        current_user.email = user_update.email
+    
+    # Aktualizuj pola profilu
+    if user_update.first_name is not None:
+        current_user.first_name = user_update.first_name
+    if user_update.last_name is not None:
+        current_user.last_name = user_update.last_name
+    if user_update.bio is not None:
+        current_user.bio = user_update.bio
+    if user_update.avatar_url is not None:
+        current_user.avatar_url = user_update.avatar_url
+    if user_update.location is not None:
+        current_user.location = user_update.location
+    if user_update.linkedin_url is not None:
+        current_user.linkedin_url = user_update.linkedin_url
+    if user_update.github_url is not None:
+        current_user.github_url = user_update.github_url
+    if user_update.website is not None:
+        current_user.website = user_update.website
+    if user_update.skills is not None:
+        current_user.skills = user_update.skills
+    if user_update.experience_years is not None:
+        current_user.experience_years = user_update.experience_years
+    
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+    
+    return current_user
+
+
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(
     user_id: int,
@@ -98,8 +169,27 @@ def update_user(
             )
         user.email = user_update.email
     
-    if user_update.is_active is not None:
-        user.is_active = user_update.is_active
+    # Aktualizuj pola profilu
+    if user_update.first_name is not None:
+        user.first_name = user_update.first_name
+    if user_update.last_name is not None:
+        user.last_name = user_update.last_name
+    if user_update.bio is not None:
+        user.bio = user_update.bio
+    if user_update.avatar_url is not None:
+        user.avatar_url = user_update.avatar_url
+    if user_update.location is not None:
+        user.location = user_update.location
+    if user_update.linkedin_url is not None:
+        user.linkedin_url = user_update.linkedin_url
+    if user_update.github_url is not None:
+        user.github_url = user_update.github_url
+    if user_update.website is not None:
+        user.website = user_update.website
+    if user_update.skills is not None:
+        user.skills = user_update.skills
+    if user_update.experience_years is not None:
+        user.experience_years = user_update.experience_years
     
     session.add(user)
     session.commit()
