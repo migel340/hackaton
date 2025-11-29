@@ -2,7 +2,9 @@ from typing import Generator
 
 from sqlmodel import Session, create_engine, SQLModel
 
-from backend.config import settings
+
+from backend.app.config import settings
+from backend.models.user import User  # noqa: F401 - needed for SQLModel.metadata
 
 
 # Database URL from env via config, fallback to sqlite
