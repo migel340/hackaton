@@ -1,15 +1,24 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from models.signal import SignalType
 
 
 # Schema do tworzenia sygnału
 class UserSignalCreate(BaseModel):
-    signal_type: SignalType
-    category_id: Optional[int] = None
+    signal_type: SignalType = Field(..., examples=["FREELANCER"])
+    category_id: Optional[int] = Field(default=None, examples=[None])
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {"signal_type": "FREELANCER"},
+                {"signal_type": "IDEA_CREATOR", "category_id": 1},
+            ]
+        }
+    }
 
 
 # Schema do aktualizacji sygnału

@@ -2,13 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
-from sqlmodel import Field, Relationship, SQLModel
-
-if TYPE_CHECKING:
-    from models.category import Category
-    from models.user import User
+from sqlmodel import Field, SQLModel
 
 
 class SignalType(str, Enum):
@@ -29,10 +25,6 @@ class UserSignal(SQLModel, table=True):
     category_id: Optional[int] = Field(default=None, foreign_key="category.id", index=True)
     created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
     is_active: bool = Field(default=True)  # Czy sygnał jest nadal aktywny
-    
-    # Relationships
-    user: Optional["User"] = Relationship(back_populates="signals")
-    category: Optional["Category"] = Relationship(back_populates="signals")
     
     class Config:
         use_enum_values = True
