@@ -1,99 +1,136 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Link, useFetcher, useNavigate } from "react-router-dom";
+
+type ActionData = {
+  ok?: boolean;
+  message?: string;
+  redirectTo?: string;
+  fieldErrors?: {
+    email?: string;
+    password?: string;
+  };
+};
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const fetcher = useFetcher<ActionData>();
   const [showPwd, setShowPwd] = useState(false);
-  const [errors, setErrors] = useState({ email: false, password: false });
 
-  function validateEmail(email) {
-    const el = document.createElement("input");
-    el.type = "email";
-    el.value = email;
-    return el.checkValidity();
-  }
+  const isSubmitting = fetcher.state === "submitting";
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const emailValid = validateEmail(email);
-    const pwdValid = password.length >= 6;
-
-    setErrors({ email: !emailValid, password: !pwdValid });
-    if (!emailValid || !pwdValid) return;
-
-    alert(`Zalogowano jako: ${email}`);
-  };
+  useEffect(() => {
+    if (!fetcher.data) return;
+    if (fetcher.data.redirectTo) {
+      navigate(fetcher.data.redirectTo);
+    } else if (fetcher.data.ok) {
+      navigate("/dashboard");
+    }
+  }, [fetcher.data, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-base-200">
       <div className="card w-full max-w-sm shadow-xl bg-base-100">
-        <form className="card-body gap-4" onSubmit={handleSubmit}>
+        <div className="card-body gap-4">
           <h2 className="card-title text-2xl justify-center mb-2">Logowanie</h2>
 
-          {/* EMAIL */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Email</span>
-            </label>
-            <input
-              type="email"
-              placeholder="email@example.com"
-              className={`input input-bordered ${
-                errors.email ? "input-error" : ""
-              }`}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            {errors.email && (
-              <label className="label">
-                <span className="label-text-alt text-error">
-                  Niepoprawny adres email.
-                </span>
-              </label>
-            )}
-          </div>
-
-          {/* PASSWORD */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Hasło</span>
-            </label>
-            <div className="relative">
-              <input
-                type={showPwd ? "text" : "password"}
-                placeholder="••••••"
-                className={`input input-bordered w-full pr-12 ${
-                  errors.password ? "input-error" : ""
-                }`}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="btn btn-ghost btn-xs absolute right-2 top-1/2 -translate-y-1/2"
-                onClick={() => setShowPwd(!showPwd)}
-              >
-                {showPwd ? "Ukryj" : "Pokaż"}
-              </button>
+          {fetcher.data?.message && !fetcher.data.ok && (
+            <div role="alert" className="alert alert-error">
+              <span>{fetcher.data.message}</span>
             </div>
-            {errors.password && (
+          )}
+
+          <fetcher.Form method="post" className="flex flex-col gap-4">
+            {/* EMAIL */}
+            <div className="form-control">
               <label className="label">
-                <span className="label-text-alt text-error">
-                  Min. 6 znaków.
-                </span>
+                <span className="label-text">Email</span>
               </label>
-            )}
-          </div>
+              <input
+                name="email"
+                type="email"
+                placeholder="email@example.com"
+                className={`input input-bordered ${
+                  fetcher.data?.fieldErrors?.email ? "input-error" : ""
+                }`}
+                autoComplete="email"
+                required
+              />
+              {(fetcher.data?.fieldErrors?.email || null) && (
+                <label className="label">
+                  <span className="label-text-alt text-error">
+                    {fetcher.data?.fieldErrors?.email}
+                  </span>
+                </label>
+              )}
+            </div>
 
-          {/* SUBMIT */}
-          <button className="btn btn-primary w-full">Zaloguj się</button>
+            {/* PASSWORD */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Hasło</span>
+              </label>
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPwd ? "text" : "password"}
+                  placeholder="••••••"
+                  className={`input input-bordered w-full pr-12 ${
+                    fetcher.data?.fieldErrors?.password ? "input-error" : ""
+                  }`}
+                  autoComplete="current-password"
+                  minLength={6}
+                  required
+                />
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-xs absolute right-2 top-1/2 -translate-y-1/2"
+                  onClick={() => setShowPwd((v) => !v)}
+                >
+                  {showPwd ? "Ukryj" : "Pokaż"}
+                </button>
+              </div>
+              {(fetcher.data?.fieldErrors?.password || null) && (
+                <label className="label">
+                  <span className="label-text-alt text-error">
+                    {fetcher.data?.fieldErrors?.password}
+                  </span>
+                </label>
+              )}
+            </div>
 
-          <div className="divider">lub</div>
+            {/* REMEMBER */}
+            <label className="cursor-pointer flex items-center gap-2">
+              <input
+                name="remember"
+                type="checkbox"
+                className="checkbox checkbox-sm"
+              />
+              <span className="label-text">Zapamiętaj mnie</span>
+            </label>
 
-          <p className="text-center text-sm">
-            Nie masz konta? <a className="link link-primary">Zarejestruj się</a>
-          </p>
-        </form>
+            {/* SUBMIT */}
+            <button
+              className={`btn btn-primary w-full ${
+                isSubmitting ? "btn-disabled" : ""
+              }`}
+              disabled={isSubmitting}
+            >
+              {isSubmitting && (
+                <span className="loading loading-spinner loading-sm mr-2" />
+              )}
+              {isSubmitting ? "Logowanie..." : "Zaloguj się"}
+            </button>
+
+            <div className="divider">lub</div>
+
+            <p className="text-center text-sm">
+              Nie masz konta?{" "}
+              <Link to="/auth/register" className="link link-primary">
+                Zarejestruj się
+              </Link>
+            </p>
+          </fetcher.Form>
+        </div>
       </div>
     </div>
   );
