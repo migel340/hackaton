@@ -1,10 +1,11 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-from backend.routers import users as users_router
-from backend.routers import auth as auth_router
-from backend.services.db import create_db_and_tables
-# Import DB helpers and models from the separated modules:
+
+from routers import auth as auth_router
+from routers import users as users_router
+from services.db import create_db_and_tables
 
 # Zezwalamy na komunikację z frontendem
 origins = [
@@ -31,6 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/api/v1")
 def read_root():
     return {"message": "XD"}
@@ -39,7 +41,6 @@ def read_root():
 @app.get("/api/v1/health")
 def health_check():
     return {"status": "ok"}
-
 
 
 # Register routers (mounted under /api/v1)
