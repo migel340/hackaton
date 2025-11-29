@@ -18,9 +18,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/api/v1")
 def read_root():
-    return {"message": "Działa!"}
+    return {"message": ""}
 
-@app.get("/api/data")
-def get_data():
+@app.get("/api/v1/health")
+def health_check():
+    return {"status": "ok"}
+
+@app.get("/api/v1/login")
+def login():
+    return {"message": "Login endpoint"}
+
+@app.get("/api/v1/register")
+def register():
+    return {"message": "Register endpoint"}
