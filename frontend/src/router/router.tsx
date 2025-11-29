@@ -4,6 +4,7 @@ import RegisterPage from "@/pages/auth/register/RegisterPage";
 import MainLayout from "@layouts/MainLayout";
 import { action as loginAction } from "@/pages/auth/login/action";
 import { isAuthenticated } from "@/api/auth";
+import AddSignalPage from "@/pages/signals/add/AddSignalPage";
 
 function redirectIfAuthenticated() {
   if (isAuthenticated()) {
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
             <p>Dashboard content goes here.</p>
           </div>
         ),
+      },
+      {
+        path: "/signals/add",
+        element: <AddSignalPage />,
       },
       {
         path: "/settings",
