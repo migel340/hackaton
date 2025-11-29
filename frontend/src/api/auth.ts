@@ -9,7 +9,11 @@ export type User = {
 export type LoginResult = {
   ok?: boolean;
   token?: string;
+<<<<<<< HEAD
   access_token?: string;
+=======
+  accessToken?: string;
+>>>>>>> 9f5e3f277cd0c8070cecf85ac21996cb6a512e45
   refreshToken?: string;
   user?: User;
   message?: string;
@@ -26,11 +30,16 @@ export async function login(
   password: string,
   opts?: { remember?: boolean }
 ): Promise<LoginResult> {
+<<<<<<< HEAD
   const result = await api.post<LoginResult>("/auth/login", {
+=======
+  const result = await api.post<LoginResult>("auth/login", {
+>>>>>>> 9f5e3f277cd0c8070cecf85ac21996cb6a512e45
     email,
     password,
   });
 
+<<<<<<< HEAD
   console.log("API login result:", result);
   console.log("Remember option:", opts?.remember);
 
@@ -40,6 +49,12 @@ export async function login(
   if (token) {
     authToken.set(token, opts?.remember);
     console.log("Token saved, verifying:", authToken.get() ? "success" : "failed");
+=======
+  // Zapisz tokeny JWT po udanym logowaniu
+  const token = result.accessToken || result.token;
+  if (token) {
+    authToken.set(token, opts?.remember);
+>>>>>>> 9f5e3f277cd0c8070cecf85ac21996cb6a512e45
     if (result.refreshToken) {
       authToken.setRefresh(result.refreshToken, opts?.remember);
     }
@@ -72,7 +87,12 @@ export async function register(
     name,
   });
 
+<<<<<<< HEAD
   const token = result.access_token || result.token;
+=======
+  // Opcjonalnie: automatyczne logowanie po rejestracji
+  const token = result.accessToken || result.token;
+>>>>>>> 9f5e3f277cd0c8070cecf85ac21996cb6a512e45
   if (token) {
     authToken.set(token, false);
     if (result.refreshToken) {
@@ -89,6 +109,7 @@ export function isAuthenticated(): boolean {
 
 export function getAuthToken(): string | null {
   return authToken.get();
+<<<<<<< HEAD
 }
 
 export async function registerUser(payload: {
@@ -115,4 +136,6 @@ async function safeMessage(res: Response) {
   } catch {
     return null;
   }
+=======
+>>>>>>> 9f5e3f277cd0c8070cecf85ac21996cb6a512e45
 }
