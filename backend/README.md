@@ -22,11 +22,6 @@ docker-compose up -d
 
 #### 3. Utwórz środowisko wirtualne i zainstaluj zależności
 
-**Opcja A - Automatycznie (zalecane):**
-```bash
-./setup.sh
-```
-
 **Opcja B - Ręcznie:**
 ```bash
 # Utwórz venv
