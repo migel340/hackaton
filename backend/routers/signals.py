@@ -147,84 +147,6 @@ def remove_signal(
     return None
 
 
-@router.get("/match/{signal_id}", response_model=SignalMatchResponse)
-def match_signals(
-    signal_id: int,
-    current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
-):
-    """
-    Znajdź pasujące sygnały dla danego sygnału użytkownika.
-    
-    Logika matchowania:
-    - FREELANCER (1) szuka STARTUP_IDEA (2)
-    - STARTUP_IDEA (2) szuka FREELANCER (1) i INVESTOR (3)
-    - INVESTOR (3) szuka STARTUP_IDEA (2)
-    
-    Zwraca listę pasujących sygnałów z współczynnikiem dopasowania (0-100).
-    """
-    # Pobierz sygnał źródłowy
-    source_signal = session.get(UserSignal, signal_id)
-    
-    if not source_signal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Signal not found"
-        )
-    
-    # Sprawdź czy sygnał należy do użytkownika
-    if source_signal.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only match your own signals"
-        )
-    
-    # Pobierz kategorie które pasują
-    matching_category_ids = get_matching_category_ids(source_signal.signal_category_id)
-    
-    if not matching_category_ids:
-        return {
-            "source_signal_id": signal_id,
-            "matches": []
-        }
-    
-    # Pobierz sygnały z pasujących kategorii (nie własne)
-    target_signals = session.exec(
-        select(UserSignal).where(
-            col(UserSignal.signal_category_id).in_(matching_category_ids),
-            UserSignal.user_id != current_user.id,
-            UserSignal.is_active == True  # noqa: E712
-        )
-    ).all()
-    
-    if not target_signals:
-        return {
-            "source_signal_id": signal_id,
-            "matches": []
-        }
-    
-    # Przygotuj dane do matchowania
-    target_data = [
-        {"id": sig.id, "details": sig.details}
-        for sig in target_signals
-    ]
-    
-    # Oblicz dopasowanie przez OpenAI
-    matches = calculate_bulk_signal_matches(
-        source_signal_id=signal_id,
-        source_details=source_signal.details,
-        target_signals=target_data
-    )
-    
-    # Sortuj po accurate malejąco
-    matches.sort(key=lambda x: x["accurate"], reverse=True)
-    
-    return {
-        "source_signal_id": signal_id,
-        "matches": matches
-    }
-
-
 @router.get("/match-all", response_model=SignalMatchAllResponse)
 def match_all_signals(
     min_accurate: float = 0,
@@ -321,4 +243,90 @@ def match_all_signals(
         "total_signals": len(user_signals),
         "total_matches": total_matches,
         "results": results
+    }
+
+
+@router.get("/match/{signal_id}", response_model=SignalMatchResponse)
+def match_signals(
+    signal_id: int,
+    min_accurate: float = 0,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Znajdź pasujące sygnały dla danego sygnału użytkownika.
+    
+    - **min_accurate**: Minimalny próg dopasowania (0-100), domyślnie 0
+    
+    Logika matchowania:
+    - FREELANCER (1) szuka STARTUP_IDEA (2)
+    - STARTUP_IDEA (2) szuka FREELANCER (1) i INVESTOR (3)
+    - INVESTOR (3) szuka STARTUP_IDEA (2)
+    
+    Zwraca listę pasujących sygnałów z współczynnikiem dopasowania (0-100).
+    """
+    # Pobierz sygnał źródłowy
+    source_signal = session.get(UserSignal, signal_id)
+    
+    if not source_signal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Signal not found"
+        )
+    
+    # Sprawdź czy sygnał należy do użytkownika
+    if source_signal.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only match your own signals"
+        )
+    
+    # Pobierz kategorie które pasują
+    matching_category_ids = get_matching_category_ids(source_signal.signal_category_id)
+    
+    if not matching_category_ids:
+        return {
+            "source_signal_id": signal_id,
+            "matches": []
+        }
+    
+    # Pobierz sygnały z pasujących kategorii (nie własne)
+    target_signals = session.exec(
+        select(UserSignal).where(
+            col(UserSignal.signal_category_id).in_(matching_category_ids),
+            UserSignal.user_id != current_user.id,
+            UserSignal.is_active == True  # noqa: E712
+        )
+    ).all()
+    
+    if not target_signals:
+        return {
+            "source_signal_id": signal_id,
+            "matches": []
+        }
+    
+    # Przygotuj dane do matchowania
+    target_data = [
+        {"id": sig.id, "details": sig.details}
+        for sig in target_signals
+    ]
+    
+    # Oblicz dopasowanie przez OpenAI
+    matches = calculate_bulk_signal_matches(
+        source_signal_id=signal_id,
+        source_details=source_signal.details,
+        target_signals=target_data
+    )
+    
+    # Filtruj po min_accurate
+    filtered_matches = [
+        m for m in matches if m["accurate"] >= min_accurate
+    ]
+    
+    # Sortuj po accurate malejąco
+    filtered_matches.sort(key=lambda x: x["accurate"], reverse=True)
+    
+    return {
+        "source_signal_id": signal_id,
+        "matches": filtered_matches
     }
