@@ -10,7 +10,6 @@ origins = [
     "http://127.0.0.1:5173",
     # Tutaj później dodasz adres z deployu, np. "https://twoj-projekt.vercel.app"
 ]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -22,3 +21,6 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"message": "Działa!"}
+
+@app.get("/api/data")
+def get_data():
