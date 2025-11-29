@@ -273,6 +273,10 @@ def seed_test_signals(session: Session, users: dict[str, User]) -> list[UserSign
             print(f"  ⏭️  Signal for '{signal_data['user']}' (cat {signal_data['signal_category_id']}) already exists, skipping...")
             continue
         
+        if user.id is None:
+            print(f"  ⚠️  User '{signal_data['user']}' has no ID, skipping signal...")
+            continue
+        
         new_signal = UserSignal(
             user_id=user.id,
             signal_category_id=signal_data["signal_category_id"],
