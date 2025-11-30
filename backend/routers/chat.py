@@ -200,12 +200,13 @@ def mark_as_read(
 async def chat_websocket(
     websocket: WebSocket,
     token: str = Query(...),
-    session: Session = Depends(get_session),
 ):
     """
     WebSocket dla chatu w czasie rzeczywistym.
     Połącz się: ws://localhost:8000/api/v1/chat/ws?token=<JWT>
     """
+    from services.db import engine
+    
     # Weryfikuj token
     payload = decode_access_token(token)
     if not payload:
@@ -219,11 +220,13 @@ async def chat_websocket(
     
     user_id = int(user_id)
     
-    # Sprawdź czy user istnieje
-    user = session.get(User, user_id)
-    if not user:
-        await websocket.close(code=4001, reason="User not found")
-        return
+    # Sprawdź czy user istnieje (krótka sesja)
+    with Session(engine) as session:
+        user = session.get(User, user_id)
+        if not user:
+            await websocket.close(code=4001, reason="User not found")
+            return
+        username = user.username  # Zapisz przed zamknięciem sesji
     
     # Połącz
     await chat_manager.connect(user_id, websocket)
@@ -244,35 +247,39 @@ async def chat_websocket(
                     await websocket.send_json({"type": "error", "message": "Missing receiver_id or content"})
                     continue
                 
-                # Sprawdź odbiorcę
-                receiver = session.get(User, receiver_id)
-                if not receiver:
-                    await websocket.send_json({"type": "error", "message": "Receiver not found"})
-                    continue
+                # Użyj nowej sesji dla operacji na bazie
+                with Session(engine) as session:
+                    # Sprawdź odbiorcę
+                    receiver = session.get(User, receiver_id)
+                    if not receiver:
+                        await websocket.send_json({"type": "error", "message": "Receiver not found"})
+                        continue
+                    
+                    # Zapisz wiadomość
+                    message = Message(
+                        sender_id=user_id,
+                        receiver_id=receiver_id,
+                        content=content,
+                    )
+                    session.add(message)
+                    session.commit()
+                    session.refresh(message)
+                    
+                    # Przygotuj dane do wysłania
+                    ws_message = {
+                        "type": "new_message",
+                        "message": {
+                            "id": message.id,
+                            "sender_id": message.sender_id,
+                            "receiver_id": message.receiver_id,
+                            "content": message.content,
+                            "created_at": message.created_at.isoformat(),
+                            "is_read": message.is_read,
+                        },
+                        "sender_username": username,
+                    }
                 
-                # Zapisz wiadomość
-                message = Message(
-                    sender_id=user_id,
-                    receiver_id=receiver_id,
-                    content=content,
-                )
-                session.add(message)
-                session.commit()
-                session.refresh(message)
-                
-                # Wyślij do odbiorcy
-                ws_message = {
-                    "type": "new_message",
-                    "message": {
-                        "id": message.id,
-                        "sender_id": message.sender_id,
-                        "receiver_id": message.receiver_id,
-                        "content": message.content,
-                        "created_at": message.created_at.isoformat(),
-                        "is_read": message.is_read,
-                    },
-                    "sender_username": user.username,
-                }
+                # Wyślij do odbiorcy (poza sesją)
                 await chat_manager.send_to_user(receiver_id, ws_message)
                 
                 # Potwierdź wysłanie nadawcy
@@ -288,7 +295,7 @@ async def chat_websocket(
                     await chat_manager.send_to_user(receiver_id, {
                         "type": "typing",
                         "user_id": user_id,
-                        "username": user.username,
+                        "username": username,
                     })
             
             elif msg_type == "ping":

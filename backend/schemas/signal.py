@@ -69,6 +69,7 @@ class SignalMatchResult(BaseModel):
     accurate: float = Field(..., ge=0, le=100)
     details: Optional[Any] = None
     signal_category_id: Optional[int] = None
+    user_id: Optional[int] = None
     username: Optional[str] = None
 
 

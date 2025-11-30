@@ -7,7 +7,7 @@ import {
   skillLabels,
 } from "@/feature/signals/signalSchema";
 import { signalTypeColors } from "./signalTypeColors";
-import { ChatWindow } from "@/feature/chat";
+import { ChatWindow, useChatWebSocket } from "@/feature/chat";
 
 interface SignalDetailsModalProps {
   signal: Signal | null;
@@ -19,6 +19,9 @@ export const SignalDetailsModal = ({
   onClose,
 }: SignalDetailsModalProps) => {
   const [showChat, setShowChat] = useState(false);
+  
+  // WebSocket do wysyłania wiadomości
+  const { isConnected, sendMessage: sendMessageViaWs } = useChatWebSocket({});
   
   if (!signal) return null;
 
@@ -236,6 +239,8 @@ export const SignalDetailsModal = ({
           userId={signal.user_id || 0}
           username={signal.username}
           onClose={() => setShowChat(false)}
+          onSendViaWs={isConnected ? sendMessageViaWs : undefined}
+          signalType={signalType}
         />
       )}
     </dialog>

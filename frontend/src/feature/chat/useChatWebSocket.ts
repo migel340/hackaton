@@ -6,6 +6,7 @@ const getAuthToken = () => localStorage.getItem("auth_token");
 
 interface UseChatWebSocketOptions {
   onNewMessage?: (message: Message, senderUsername: string) => void;
+  onMessageSent?: (message: Message) => void;
   onTyping?: (userId: number, username: string) => void;
   onError?: (error: string) => void;
 }
@@ -51,6 +52,13 @@ export function useChatWebSocket(options: UseChatWebSocketOptions = {}) {
 
         if (data.type === "new_message" && data.message) {
           options.onNewMessage?.(data.message, data.sender_username || "Unknown");
+        } else if (data.type === "message_sent" && data.message) {
+          // Potwierdzenie wysłania - emituj zdarzenie do ChatWindow
+          options.onMessageSent?.(data.message);
+          // Dispatch custom event dla ChatWindow
+          window.dispatchEvent(
+            new CustomEvent("chat-message-sent", { detail: data.message })
+          );
         } else if (data.type === "typing" && data.user_id && data.username) {
           options.onTyping?.(data.user_id, data.username);
         } else if (data.type === "error") {

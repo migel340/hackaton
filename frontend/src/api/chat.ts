@@ -33,8 +33,7 @@ export const chatApi = {
    * Pobierz listę konwersacji
    */
   getConversations: async (): Promise<ConversationPreview[]> => {
-    const response = await api.get<ConversationPreview[]>("/chat/conversations");
-    return response.data;
+    return api.get<ConversationPreview[]>("/chat/conversations");
   },
 
   /**
@@ -48,29 +47,27 @@ export const chatApi = {
     const params = new URLSearchParams({ limit: String(limit) });
     if (before) params.append("before", before);
     
-    const response = await api.get<Message[]>(
+    return api.get<Message[]>(
       `/chat/messages/${userId}?${params.toString()}`
     );
-    return response.data;
   },
 
   /**
    * Wyślij wiadomość przez REST
    */
   sendMessage: async (receiverId: number, content: string): Promise<Message> => {
-    const response = await api.post<Message>("/chat/messages", {
+    return api.post<Message>("/chat/messages", {
       receiver_id: receiverId,
       content,
     });
-    return response.data;
   },
 
   /**
    * Pobierz liczbę nieprzeczytanych wiadomości
    */
   getUnreadCount: async (): Promise<number> => {
-    const response = await api.get<{ unread_count: number }>("/chat/unread-count");
-    return response.data.unread_count;
+    const data = await api.get<{ unread_count: number }>("/chat/unread-count");
+    return data.unread_count;
   },
 
   /**

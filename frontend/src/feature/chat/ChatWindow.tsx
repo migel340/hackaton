@@ -1,11 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { chatApi, type Message } from "@/api/chat";
+import { signalTypeColors } from "@/feature/signals/radar/signalTypeColors";
 
 interface ChatWindowProps {
   userId: number;
   username: string;
   onClose: () => void;
   newMessageFromWs?: Message | null;
+  /** WebSocket send function - if provided, messages will be sent via WS */
+  onSendViaWs?: (receiverId: number, content: string) => boolean;
+  /** Signal type for color coding */
+  signalType?: string;
 }
 
 export function ChatWindow({
@@ -13,6 +18,8 @@ export function ChatWindow({
   username,
   onClose,
   newMessageFromWs,
+  onSendViaWs,
+  signalType,
 }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -37,7 +44,7 @@ export function ChatWindow({
     fetchMessages();
   }, [userId]);
 
-  // Dodaj nową wiadomość z WebSocket
+  // Dodaj nową wiadomość z WebSocket (otrzymane od innego użytkownika)
   useEffect(() => {
     if (newMessageFromWs && newMessageFromWs.sender_id === userId) {
       setMessages((prev) => [...prev, newMessageFromWs]);
@@ -52,17 +59,56 @@ export function ChatWindow({
   const handleSend = async () => {
     if (!newMessage.trim() || isSending) return;
 
+    const content = newMessage.trim();
+    console.log("[ChatWindow] Sending message:", { userId, content, hasWs: !!onSendViaWs });
+
+    // Spróbuj wysłać przez WebSocket jeśli dostępny
+    if (onSendViaWs) {
+      const sent = onSendViaWs(userId, content);
+      console.log("[ChatWindow] WS send result:", sent);
+      if (sent) {
+        setIsSending(true);
+        setNewMessage("");
+        // Timeout na wypadek braku odpowiedzi
+        setTimeout(() => {
+          setIsSending(false);
+        }, 5000);
+        return;
+      }
+    }
+
+    // Fallback do REST API
+    console.log("[ChatWindow] Using REST API fallback");
     try {
       setIsSending(true);
-      const sent = await chatApi.sendMessage(userId, newMessage.trim());
+      const sent = await chatApi.sendMessage(userId, content);
+      console.log("[ChatWindow] REST API response:", sent);
       setMessages((prev) => [...prev, sent]);
       setNewMessage("");
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("[ChatWindow] Error sending message:", error);
     } finally {
       setIsSending(false);
     }
   };
+
+  // Funkcja do dodania wysłanej wiadomości (wywoływana z zewnątrz po potwierdzeniu WS)
+  const addSentMessage = (message: Message) => {
+    setMessages((prev) => [...prev, message]);
+    setIsSending(false);
+  };
+
+  // Eksportuj funkcję przez ref lub callback
+  useEffect(() => {
+    // Expose addSentMessage to parent via custom event pattern
+    const handler = (e: CustomEvent<Message>) => {
+      if (e.detail.receiver_id === userId) {
+        addSentMessage(e.detail);
+      }
+    };
+    window.addEventListener('chat-message-sent' as any, handler as EventListener);
+    return () => window.removeEventListener('chat-message-sent' as any, handler as EventListener);
+  }, [userId]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -75,14 +121,7 @@ export function ChatWindow({
     <div className="fixed bottom-4 right-4 w-80 sm:w-96 h-[28rem] bg-base-100 rounded-lg shadow-2xl flex flex-col border border-base-300 z-50">
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-base-300 bg-primary text-primary-content rounded-t-lg">
-        <div className="flex items-center gap-2">
-          <div className="avatar placeholder">
-            <div className="bg-primary-content text-primary rounded-full w-8">
-              <span className="text-sm">{username[0]?.toUpperCase()}</span>
-            </div>
-          </div>
-          <span className="font-semibold">{username}</span>
-        </div>
+        <span className="font-semibold">{username}</span>
         <button
           onClick={onClose}
           className="btn btn-ghost btn-sm btn-circle text-primary-content"
@@ -102,7 +141,13 @@ export function ChatWindow({
             Brak wiadomości. Rozpocznij konwersację!
           </div>
         ) : (
-          messages.map((msg) => (
+          messages.map((msg) => {
+            // Kolor dla wiadomości od rozmówcy (bazuje na jego signalType)
+            const otherUserBubbleStyle = signalType && signalTypeColors[signalType]
+              ? { backgroundColor: signalTypeColors[signalType], color: 'white' }
+              : undefined;
+            
+            return (
             <div
               key={msg.id}
               className={`chat ${
@@ -112,9 +157,10 @@ export function ChatWindow({
               <div
                 className={`chat-bubble ${
                   msg.sender_id === userId
-                    ? "chat-bubble-neutral"
-                    : "chat-bubble-primary"
+                    ? ""
+                    : "bg-base-300 text-base-content"
                 }`}
+                style={msg.sender_id === userId ? otherUserBubbleStyle : undefined}
               >
                 {msg.content}
               </div>
@@ -125,7 +171,8 @@ export function ChatWindow({
                 })}
               </div>
             </div>
-          ))
+          );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>

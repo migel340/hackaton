@@ -35,6 +35,7 @@ class ConversationPreview(BaseModel):
     last_message: str
     last_message_at: datetime
     unread_count: int
+    is_online: bool = False
 
 
 class ConversationsResponse(BaseModel):
@@ -50,10 +51,13 @@ class MessagesResponse(BaseModel):
 
 class ChatWebSocketMessage(BaseModel):
     """Format wiadomości WebSocket"""
-    type: str  # "new_message", "message_read", "typing"
+    type: str  # "new_message", "message_sent", "message_read", "typing", "pong", "error"
     message: Optional[MessageResponse] = None
     sender_id: Optional[int] = None
     receiver_id: Optional[int] = None
+    sender_username: Optional[str] = None
+    user_id: Optional[int] = None  # dla typing
+    username: Optional[str] = None  # dla typing
 
 
 __all__ = [

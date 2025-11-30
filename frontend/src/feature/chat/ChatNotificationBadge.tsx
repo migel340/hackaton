@@ -18,7 +18,7 @@ export function ChatNotificationBadge({ className }: ChatNotificationBadgeProps)
   const [latestWsMessage, setLatestWsMessage] = useState<Message | null>(null);
 
   // WebSocket dla powiadomień o nowych wiadomościach
-  const { isConnected } = useChatWebSocket({
+  const { isConnected, sendMessage: sendMessageViaWs } = useChatWebSocket({
     onNewMessage: (message, senderUsername) => {
       console.log("[Chat] New message from:", senderUsername);
       
@@ -59,6 +59,25 @@ export function ChatNotificationBadge({ className }: ChatNotificationBadgeProps)
         // Mamy otwarty chat z tym użytkownikiem - przekaż wiadomość
         setLatestWsMessage(message);
       }
+    },
+    onMessageSent: (message) => {
+      console.log("[Chat] Message sent confirmation:", message.id);
+      // Aktualizuj listę konwersacji po wysłaniu wiadomości
+      setConversations((prev) => {
+        const existingIdx = prev.findIndex((c) => c.user_id === message.receiver_id);
+        if (existingIdx >= 0) {
+          const updated = [...prev];
+          updated[existingIdx] = {
+            ...updated[existingIdx],
+            last_message: message.content.slice(0, 50),
+            last_message_at: message.created_at,
+          };
+          // Przenieś na górę
+          const [conv] = updated.splice(existingIdx, 1);
+          return [conv, ...updated];
+        }
+        return prev;
+      });
     },
   });
 
@@ -210,6 +229,7 @@ export function ChatNotificationBadge({ className }: ChatNotificationBadgeProps)
           username={activeChat.username}
           onClose={handleCloseChat}
           newMessageFromWs={latestWsMessage}
+          onSendViaWs={isConnected ? sendMessageViaWs : undefined}
         />
       )}
     </>
