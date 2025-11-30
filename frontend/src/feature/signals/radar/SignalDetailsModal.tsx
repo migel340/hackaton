@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Signal } from "@/api/signals";
 import { getSignalType, getSignalTitle } from "@/api/signals";
 import {
@@ -6,6 +7,7 @@ import {
   skillLabels,
 } from "@/feature/signals/signalSchema";
 import { signalTypeColors } from "./signalTypeColors";
+import { ChatWindow } from "@/feature/chat";
 
 interface SignalDetailsModalProps {
   signal: Signal | null;
@@ -16,6 +18,8 @@ export const SignalDetailsModal = ({
   signal,
   onClose,
 }: SignalDetailsModalProps) => {
+  const [showChat, setShowChat] = useState(false);
+  
   if (!signal) return null;
 
   const signalType = getSignalType(signal);
@@ -209,7 +213,14 @@ export const SignalDetailsModal = ({
 
         {/* Actions */}
         <div className="modal-action">
-          <button className="btn btn-primary">Skontaktuj się</button>
+          {signal.username && (
+            <button 
+              className="btn btn-primary"
+              onClick={() => setShowChat(true)}
+            >
+              Skontaktuj się
+            </button>
+          )}
           <button className="btn btn-ghost" onClick={onClose}>
             Zamknij
           </button>
@@ -218,6 +229,15 @@ export const SignalDetailsModal = ({
       <form method="dialog" className="modal-backdrop">
         <button onClick={onClose}>close</button>
       </form>
+      
+      {/* Chat Window */}
+      {showChat && signal.username && (
+        <ChatWindow
+          userId={signal.user_id || 0}
+          username={signal.username}
+          onClose={() => setShowChat(false)}
+        />
+      )}
     </dialog>
   );
 };

@@ -18,9 +18,10 @@ export default defineConfig({
     },
   },
    server: {
+    port: 5174,
     proxy: {
       '/local': {
-        target: 'http://localhost:4000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/local/, ''),
       },

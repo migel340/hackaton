@@ -324,6 +324,7 @@ def match_signals(
     users = session.exec(select(User).where(col(User.id).in_(user_ids))).all()
     user_map = {u.id: u.username for u in users}
     target_username_map = {sig.id: user_map.get(sig.user_id) for sig in target_signals}
+    target_user_id_map = {sig.id: sig.user_id for sig in target_signals}
     
     # Oblicz dopasowanie przez OpenAI
     matches = calculate_bulk_signal_matches(
@@ -332,13 +333,14 @@ def match_signals(
         target_signals=target_data
     )
     
-    # Dodaj details, signal_category_id i username do wyników i filtruj po min_accurate
+    # Dodaj details, signal_category_id, username i user_id do wyników i filtruj po min_accurate
     filtered_matches = [
         {
             **m, 
             "details": target_details_map.get(m["signal_id"]),
             "signal_category_id": target_category_map.get(m["signal_id"]),
-            "username": target_username_map.get(m["signal_id"])
+            "username": target_username_map.get(m["signal_id"]),
+            "user_id": target_user_id_map.get(m["signal_id"])
         }
         for m in matches if m["accurate"] >= min_accurate
     ]

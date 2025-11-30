@@ -88,6 +88,7 @@ export interface MatchItem {
   details: SignalDetails | null;
   signal_category_id?: number;
   username?: string;
+  user_id?: number;
 }
 
 export interface MatchApiResponse {

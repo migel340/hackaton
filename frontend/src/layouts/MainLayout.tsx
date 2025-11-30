@@ -1,13 +1,14 @@
 import { Outlet } from "react-router";
 import MainMenu from "@/components/MainMenu";
+import { ChatNotificationBadge } from "@/feature/chat";
 
 const MainLayout = () => {
     return (
         <div className="drawer lg:drawer-open">
             <input id="main-drawer" type="checkbox" className="drawer-toggle" />
             <div className="drawer-content flex flex-col ml-64">
-                <div className="navbar bg-base-300 lg:hidden">
-                    <div className="flex-none">
+                <div className="navbar bg-base-300">
+                    <div className="flex-none lg:hidden">
                         <label htmlFor="main-drawer" className="btn btn-square btn-ghost">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -25,7 +26,11 @@ const MainLayout = () => {
                         </label>
                     </div>
                     <div className="flex-1">
-                        <span className="text-xl font-bold">App Menu</span>
+                        <span className="text-xl font-bold lg:hidden">App Menu</span>
+                    </div>
+                    {/* Chat Notification Badge */}
+                    <div className="flex-none">
+                        <ChatNotificationBadge />
                     </div>
                 </div>
                 <main className="flex-1 p-6 bg-base-100">
