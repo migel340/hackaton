@@ -8,13 +8,6 @@ from config import settings
 client = OpenAI(api_key=settings.OPENAI_KEY)
 
 
-def get_embedding(text):
-    # Model 'text-embedding-3-small' jest najlepszy cena/jakość na hackathon
-    response = client.embeddings.create(
-        input=text,
-        model="gpt-4o-mini"
-    )
-    return response.data[0].embedding
 
 
 # Mapowanie jakie sygnały do siebie pasują
@@ -184,7 +177,6 @@ Zwróć wyniki dla wszystkich sygnałów: {signal_ids}"""
 
 
 __all__ = [
-    "get_embedding",
     "calculate_signal_match",
     "calculate_bulk_signal_matches",
     "get_matching_category_ids",
