@@ -20,15 +20,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# Debug: wyświetl CORS origins przy starcie
-print(f"CORS Origins: {settings.CORS_ORIGINS}")
-
+# Najbardziej permisywne CORS - akceptuje wszystko
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 
