@@ -83,6 +83,10 @@ export async function addSignalAction({ request }: ActionFunctionArgs): Promise<
     console.log("Creating signal with type:", type, "details:", details);
     const result = await createSignal(type, details);
     console.log("Signal created:", result);
+    
+    // Save new signal ID to localStorage so it becomes the main activity
+    localStorage.setItem("selectedUserSignalId", String(result.id));
+    
     return { ok: true, redirectTo: "/", message: "Sygnał został utworzony!" };
   } catch (error: unknown) {
     console.error("Error creating signal:", error);
