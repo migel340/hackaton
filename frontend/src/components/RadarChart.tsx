@@ -27,7 +27,22 @@ interface ViewState {
   scale: number;
 }
 
-const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: RadarChartProps) => {
+// Helper function for smooth interpolation
+const lerp = (start: number, end: number, factor: number): number => {
+  return start + (end - start) * factor;
+};
+
+// Easing function for smoother animations
+const easeOutCubic = (t: number): number => {
+  return 1 - Math.pow(1 - t, 3);
+};
+
+const RadarChart = ({
+  userSignal,
+  matches,
+  onSignalClick,
+  className = "",
+}: RadarChartProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -35,9 +50,23 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
   const [blipPositions, setBlipPositions] = useState<BlipPosition[]>([]);
   const animationRef = useRef<number>(0);
   const sweepAngleRef = useRef(0);
-  
-  // View state for pan and zoom
-  const [view, setView] = useState<ViewState>({ offsetX: 0, offsetY: 0, scale: 1 });
+
+  // Animated view state - target is where we want to go, current is interpolated
+  // offsetX: -128 kompensuje ml-64 (256px / 2 = 128px) żeby graf był na środku ekranu
+  const [targetView, setTargetView] = useState<ViewState>({
+    offsetX: -128,
+    offsetY: 0,
+    scale: 1,
+  });
+  const currentViewRef = useRef<ViewState>({
+    offsetX: -128,
+    offsetY: 0,
+    scale: 1,
+  });
+
+  // Animated blip hover states (for smooth size transitions)
+  const blipHoverStatesRef = useRef<Map<number, number>>(new Map());
+
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
@@ -58,7 +87,7 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
   // Calculate blip positions (in world coordinates, centered at 0,0)
   useEffect(() => {
-    const baseRadius = 300; // Base radius in world coordinates
+    const baseRadius = 270; // Base radius in world coordinates (reduced by 10%)
 
     const positions: BlipPosition[] = matches.map((signal, index) => {
       // Odległość od środka jest odwrotnością match_score
@@ -84,26 +113,33 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
   }, [matches]);
 
   // Convert world coordinates to screen coordinates
-  const worldToScreen = useCallback((worldX: number, worldY: number) => {
-    const { width, height } = dimensions;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    return {
-      x: centerX + (worldX + view.offsetX) * view.scale,
-      y: centerY + (worldY + view.offsetY) * view.scale,
-    };
-  }, [dimensions, view]);
+  const worldToScreen = useCallback(
+    (worldX: number, worldY: number, view: ViewState) => {
+      const { width, height } = dimensions;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      return {
+        x: centerX + (worldX + view.offsetX) * view.scale,
+        y: centerY + (worldY + view.offsetY) * view.scale,
+      };
+    },
+    [dimensions]
+  );
 
   // Convert screen coordinates to world coordinates
-  const screenToWorld = useCallback((screenX: number, screenY: number) => {
-    const { width, height } = dimensions;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    return {
-      x: (screenX - centerX) / view.scale - view.offsetX,
-      y: (screenY - centerY) / view.scale - view.offsetY,
-    };
-  }, [dimensions, view]);
+  const screenToWorld = useCallback(
+    (screenX: number, screenY: number) => {
+      const view = currentViewRef.current;
+      const { width, height } = dimensions;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      return {
+        x: (screenX - centerX) / view.scale - view.offsetX,
+        y: (screenY - centerY) / view.scale - view.offsetY,
+      };
+    },
+    [dimensions]
+  );
 
   // Draw radar
   const drawRadar = useCallback(() => {
@@ -113,8 +149,19 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Smoothly interpolate current view towards target view
+    const animationSpeed = 0.12; // Adjust for faster/slower animations
+    const current = currentViewRef.current;
+    const target = targetView;
+
+    current.offsetX = lerp(current.offsetX, target.offsetX, animationSpeed);
+    current.offsetY = lerp(current.offsetY, target.offsetY, animationSpeed);
+    current.scale = lerp(current.scale, target.scale, animationSpeed);
+
+    const view = current;
+
     const { width, height } = dimensions;
-    const baseRadius = 300;
+    const baseRadius = 270; // Reduced by 10%
 
     // Clear canvas with light background
     ctx.fillStyle = "#f8fafc";
@@ -122,11 +169,11 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
     // Draw grid pattern (infinite grid effect)
     const gridSize = 50 * view.scale;
-    const { x: originX, y: originY } = worldToScreen(0, 0);
-    
+    const { x: originX, y: originY } = worldToScreen(0, 0, view);
+
     ctx.strokeStyle = "rgba(100, 116, 139, 0.1)";
     ctx.lineWidth = 1;
-    
+
     // Vertical lines
     const startGridX = Math.floor(-originX / gridSize) * gridSize;
     for (let x = startGridX; x < width - originX; x += gridSize) {
@@ -135,7 +182,7 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
       ctx.lineTo(originX + x, height);
       ctx.stroke();
     }
-    
+
     // Horizontal lines
     const startGridY = Math.floor(-originY / gridSize) * gridSize;
     for (let y = startGridY; y < height - originY; y += gridSize) {
@@ -149,8 +196,8 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     const ringCount = 5;
     for (let i = 1; i <= ringCount; i++) {
       const radius = (i / ringCount) * baseRadius * view.scale;
-      const { x: cx, y: cy } = worldToScreen(0, 0);
-      
+      const { x: cx, y: cy } = worldToScreen(0, 0, view);
+
       ctx.beginPath();
       ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
       ctx.strokeStyle = `rgba(59, 130, 246, ${0.2 + (ringCount - i) * 0.05})`;
@@ -167,9 +214,9 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     }
 
     // Draw cross lines
-    const { x: cx, y: cy } = worldToScreen(0, 0);
+    const { x: cx, y: cy } = worldToScreen(0, 0, view);
     const maxDrawRadius = baseRadius * view.scale;
-    
+
     ctx.strokeStyle = "rgba(59, 130, 246, 0.15)";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -193,39 +240,62 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
     const sweepEndX = cx + maxDrawRadius * Math.cos(sweepAngleRef.current);
     const sweepEndY = cy + maxDrawRadius * Math.sin(sweepAngleRef.current);
-    
+
     const gradient = ctx.createLinearGradient(cx, cy, sweepEndX, sweepEndY);
     gradient.addColorStop(0, "rgba(59, 130, 246, 0.4)");
     gradient.addColorStop(1, "rgba(59, 130, 246, 0)");
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, maxDrawRadius, sweepAngleRef.current - 0.3, sweepAngleRef.current);
+    ctx.arc(
+      cx,
+      cy,
+      maxDrawRadius,
+      sweepAngleRef.current - 0.3,
+      sweepAngleRef.current
+    );
     ctx.closePath();
     ctx.fillStyle = gradient;
     ctx.fill();
 
-    // Draw blips (matched signals)
+    // Draw blips (matched signals) with smooth hover animation
     blipPositions.forEach(({ signal, x: worldX, y: worldY }) => {
-      const { x, y } = worldToScreen(worldX, worldY);
-      const signalType = getSignalType(signal);
-      
+      const { x, y } = worldToScreen(worldX, worldY, view);
+
       // Skip if outside visible area (with some margin)
       if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
-      
-      const isHovered = hoveredSignal?.id === signal.id;
-      const baseBlipRadius = isHovered ? 20 : 14;
-      const blipRadius = baseBlipRadius * Math.min(view.scale, 1.5);
-      const color = isHovered
-        ? signalTypeColorsHover[signalType]
-        : signalTypeColors[signalType];
 
-      // Glow effect
-      const glow = ctx.createRadialGradient(x, y, 0, x, y, blipRadius * 2);
+      const isHovered = hoveredSignal?.id === signal.id;
+
+      // Animate hover state (0 = not hovered, 1 = fully hovered)
+      const currentHoverState = blipHoverStatesRef.current.get(signal.id) || 0;
+      const targetHoverState = isHovered ? 1 : 0;
+      const newHoverState = lerp(currentHoverState, targetHoverState, 0.15);
+      blipHoverStatesRef.current.set(signal.id, newHoverState);
+
+      // Interpolate size based on hover state
+      const baseBlipRadius = lerp(14, 20, easeOutCubic(newHoverState));
+      const blipRadius = baseBlipRadius * Math.min(view.scale, 1.5);
+
+      // Interpolate color based on hover state
+      const baseColor = signalTypeColors[signal.type];
+      const hoverColor = signalTypeColorsHover[signal.type];
+      const color = newHoverState > 0.5 ? hoverColor : baseColor;
+
+      // Glow effect (increases with hover)
+      const glowIntensity = 1 + newHoverState * 0.5;
+      const glow = ctx.createRadialGradient(
+        x,
+        y,
+        0,
+        x,
+        y,
+        blipRadius * 2 * glowIntensity
+      );
       glow.addColorStop(0, color);
       glow.addColorStop(1, "transparent");
       ctx.beginPath();
-      ctx.arc(x, y, blipRadius * 2, 0, 2 * Math.PI);
+      ctx.arc(x, y, blipRadius * 2 * glowIntensity, 0, 2 * Math.PI);
       ctx.fillStyle = glow;
       ctx.fill();
 
@@ -235,21 +305,27 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
       ctx.fillStyle = color;
       ctx.fill();
 
-      // Border
-      ctx.strokeStyle = isHovered ? "#1e293b" : "rgba(30,41,59,0.3)";
-      ctx.lineWidth = isHovered ? 2 : 1;
+      // Border (animates thickness)
+      ctx.strokeStyle = newHoverState > 0.5 ? "#1e293b" : "rgba(30,41,59,0.3)";
+      ctx.lineWidth = lerp(1, 2, newHoverState);
       ctx.stroke();
 
       // Match score text for hovered blip or when zoomed in
-      if (isHovered || view.scale > 1.2) {
+      const textOpacity = Math.max(newHoverState, view.scale > 1.2 ? 1 : 0);
+      if (textOpacity > 0.01) {
+        ctx.globalAlpha = textOpacity;
         ctx.fillStyle = "#1e293b";
         ctx.font = `bold ${Math.max(10, 12 * view.scale)}px sans-serif`;
         ctx.textAlign = "center";
-        const matchScore = signal.match_score ?? 0;
-        ctx.fillText(`${Math.round(matchScore * 100)}%`, x, y - blipRadius - 8);
-        if (isHovered || view.scale > 1.5) {
-          ctx.fillText(signal.details.title.substring(0, 20), x, y + blipRadius + 16);
+        ctx.fillText(
+          `${Math.round(signal.match_score * 100)}%`,
+          x,
+          y - blipRadius - 8
+        );
+        if (newHoverState > 0.5 || view.scale > 1.5) {
+          ctx.fillText(signal.title.substring(0, 20), x, y + blipRadius + 16);
         }
+        ctx.globalAlpha = 1;
       }
     });
 
@@ -257,9 +333,16 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     const userSignalType = getSignalType(userSignal);
     const userColor = signalTypeColors[userSignalType];
     const userRadius = 22 * Math.min(view.scale, 1.5);
-    
+
     // User glow
-    const userGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, userRadius * 2);
+    const userGlow = ctx.createRadialGradient(
+      cx,
+      cy,
+      0,
+      cx,
+      cy,
+      userRadius * 2
+    );
     userGlow.addColorStop(0, userColor);
     userGlow.addColorStop(0.5, `${userColor}66`);
     userGlow.addColorStop(1, "transparent");
@@ -286,7 +369,14 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
     // Request next frame
     animationRef.current = requestAnimationFrame(drawRadar);
-  }, [dimensions, blipPositions, hoveredSignal, userSignal, view, worldToScreen]);
+  }, [
+    dimensions,
+    blipPositions,
+    hoveredSignal,
+    userSignal,
+    targetView,
+    worldToScreen,
+  ]);
 
   useEffect(() => {
     animationRef.current = requestAnimationFrame(drawRadar);
@@ -294,37 +384,43 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
   }, [drawRadar]);
 
   // Handle mouse wheel for zoom
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      e.preventDefault();
 
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    // Get world position before zoom
-    const worldBefore = screenToWorld(mouseX, mouseY);
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
 
-    // Calculate new scale
-    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-    const newScale = Math.max(0.2, Math.min(5, view.scale * zoomFactor));
+      // Get world position before zoom (use current animated view)
+      const worldBefore = screenToWorld(mouseX, mouseY);
 
-    // Calculate new offset to zoom towards mouse position
-    const { width, height } = dimensions;
-    const centerX = width / 2;
-    const centerY = height / 2;
+      // Calculate new scale
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newScale = Math.max(
+        0.2,
+        Math.min(5, targetView.scale * zoomFactor)
+      );
 
-    const newOffsetX = (mouseX - centerX) / newScale - worldBefore.x;
-    const newOffsetY = (mouseY - centerY) / newScale - worldBefore.y;
+      // Calculate new offset to zoom towards mouse position
+      const { width, height } = dimensions;
+      const centerX = width / 2;
+      const centerY = height / 2;
 
-    setView({
-      scale: newScale,
-      offsetX: newOffsetX,
-      offsetY: newOffsetY,
-    });
-  }, [view.scale, screenToWorld, dimensions]);
+      const newOffsetX = (mouseX - centerX) / newScale - worldBefore.x;
+      const newOffsetY = (mouseY - centerY) / newScale - worldBefore.y;
+
+      setTargetView({
+        scale: newScale,
+        offsetX: newOffsetX,
+        offsetY: newOffsetY,
+      });
+    },
+    [targetView.scale, screenToWorld, dimensions]
+  );
 
   // Attach wheel event listener
   useEffect(() => {
@@ -337,7 +433,8 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
   // Handle mouse events for pan
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (e.button === 0) { // Left click
+    if (e.button === 0) {
+      // Left click
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
     }
@@ -351,16 +448,25 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const view = currentViewRef.current;
+
     if (isPanning) {
       const dx = (e.clientX - panStart.x) / view.scale;
       const dy = (e.clientY - panStart.y) / view.scale;
-      
-      setView(prev => ({
+
+      setTargetView((prev) => ({
         ...prev,
         offsetX: prev.offsetX + dx,
         offsetY: prev.offsetY + dy,
       }));
-      
+
+      // Also update currentViewRef immediately for smoother panning
+      currentViewRef.current = {
+        ...currentViewRef.current,
+        offsetX: currentViewRef.current.offsetX + dx,
+        offsetY: currentViewRef.current.offsetY + dy,
+      };
+
       setPanStart({ x: e.clientX, y: e.clientY });
       canvas.style.cursor = "grabbing";
       return;
@@ -372,7 +478,7 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
     // Check if mouse is over any blip
     const hoveredBlip = blipPositions.find(({ x: worldX, y: worldY }) => {
-      const { x, y } = worldToScreen(worldX, worldY);
+      const { x, y } = worldToScreen(worldX, worldY, view);
       const distance = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
       return distance < 20 * Math.min(view.scale, 1.5);
     });
@@ -383,16 +489,17 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isPanning) return;
-    
+
     const canvas = canvasRef.current;
     if (!canvas || !onSignalClick) return;
 
+    const view = currentViewRef.current;
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
     const clickedBlip = blipPositions.find(({ x: worldX, y: worldY }) => {
-      const { x, y } = worldToScreen(worldX, worldY);
+      const { x, y } = worldToScreen(worldX, worldY, view);
       const distance = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
       return distance < 20 * Math.min(view.scale, 1.5);
     });
@@ -402,9 +509,9 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     }
   };
 
-  // Reset view
+  // Reset view with smooth animation
   const handleReset = () => {
-    setView({ offsetX: 0, offsetY: 0, scale: 1 });
+    setTargetView({ offsetX: -128, offsetY: 0, scale: 1 });
   };
 
   return (
@@ -423,37 +530,44 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
         onClick={handleClick}
         className="absolute inset-0 cursor-grab"
       />
-      
-      // {/* Controls */}
+      {/* Controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2">
         <button
-          onClick={() => setView(prev => ({ ...prev, scale: Math.min(5, prev.scale * 1.2) }))}
-          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm"
+          onClick={() =>
+            setTargetView((prev) => ({
+              ...prev,
+              scale: Math.min(5, prev.scale * 1.2),
+            }))
+          }
+          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
           title="Przybliż"
         >
           +
         </button>
         <button
-          onClick={() => setView(prev => ({ ...prev, scale: Math.max(0.2, prev.scale * 0.8) }))}
-          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm"
+          onClick={() =>
+            setTargetView((prev) => ({
+              ...prev,
+              scale: Math.max(0.2, prev.scale * 0.8),
+            }))
+          }
+          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
           title="Oddal"
         >
           −
         </button>
         <button
           onClick={handleReset}
-          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm"
+          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
           title="Resetuj widok"
         >
           ⟲
         </button>
       </div>
-
       {/* Zoom indicator */}
-      <div className="absolute top-4 left-4 bg-base-300/80 px-3 py-1 rounded-lg backdrop-blur-sm text-sm">
-        {Math.round(view.scale * 100)}%
+      <div className="absolute top-4 left-4 bg-base-300/80 px-3 py-1 rounded-lg backdrop-blur-sm text-sm transition-all duration-300">
+        {Math.round(targetView.scale * 100)}%
       </div>
-
       {/* Legend & Instructions */}
       <div className="absolute bottom-4 left-4 flex flex-col gap-2">
         <div className="flex gap-4 bg-base-300/90 px-4 py-2 rounded-lg backdrop-blur-sm">
