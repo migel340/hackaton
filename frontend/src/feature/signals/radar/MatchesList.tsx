@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 import type { Signal } from "@/api/signals";
 import { getSignalType, getSignalTitle } from "@/api/signals";
 import { signalTypeColors } from "./signalTypeColors";
+import { signalTypeLabels } from "@/feature/signals/signalSchema";
 import { useLanguage } from "@/i18n";
 
 interface MatchesListProps {
   matches: Signal[];
-  onSignalClick: (signal: Signal) => void;
+  onSignalFocus: (signal: Signal) => void;
+  onSignalDetails: (signal: Signal) => void;
 }
 
-export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
+export const MatchesList = ({ matches, onSignalFocus, onSignalDetails }: MatchesListProps) => {
   // Automatycznie otwieramy panel jeśli są dopasowania
 
   // Aktualizuj stan otwarcia gdy zmieni się liczba dopasowań
@@ -62,7 +64,8 @@ export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
                 <MatchCard
                   key={signal.id}
                   signal={signal}
-                  onClick={() => onSignalClick(signal)}
+                  onFocus={() => onSignalFocus(signal)}
+                  onDetails={() => onSignalDetails(signal)}
                 />
               ))}
             </div>
@@ -75,27 +78,38 @@ export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
 
 interface MatchCardProps {
   signal: Signal;
-  onClick: () => void;
+  onFocus: () => void;
+  onDetails: () => void;
 }
 
-const MatchCard = ({ signal, onClick }: MatchCardProps) => {
+const MatchCard = ({ signal, onFocus, onDetails }: MatchCardProps) => {
   const signalType = getSignalType(signal);
   const title = getSignalTitle(signal.details);
+  const { t } = useLanguage();
+
+  // Brief info based on signal type
+  const description = signal.details?.description;
+  const skills = signal.details?.skills;
+  const categories = signal.details?.categories;
+  const focusAreas = signal.details?.focus_areas;
+  const ticketSize = signal.details?.ticket_size;
+  const fundingNeeded = signal.details?.funding_needed;
 
   return (
     <div
       className="card bg-base-100 hover:bg-base-300 cursor-pointer transition-all hover:scale-[1.02] shadow-sm border border-base-200"
-      onClick={onClick}
+      onClick={onFocus}
     >
       <div className="card-body p-3">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
               className="w-3 h-3 rounded-full shrink-0"
               style={{ backgroundColor: signalTypeColors[signalType] }}
             />
-            <span className="font-semibold text-sm truncate max-w-[140px]">
-              {title}
+            <span className="text-xs text-base-content/60">
+              {signalTypeLabels[signalType]}
             </span>
           </div>
           {signal.match_score !== undefined && (
@@ -104,11 +118,54 @@ const MatchCard = ({ signal, onClick }: MatchCardProps) => {
             </div>
           )}
         </div>
+
+        {/* Title */}
+        <h3 className="font-semibold text-sm mt-1 line-clamp-1">
+          {title}
+        </h3>
+
+        {/* Username */}
         {signal.username && (
-          <p className="text-xs text-base-content/60 mt-1 pl-5">
-            {signal.username}
+          <p className="text-xs text-base-content/60">
+            @{signal.username}
           </p>
         )}
+
+        {/* Brief - description */}
+        {description && (
+          <p className="text-xs text-base-content/70 mt-1 line-clamp-2">
+            {description}
+          </p>
+        )}
+
+        {/* Skills/Categories badges */}
+        {(skills?.length || categories?.length || focusAreas?.length) && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {skills?.slice(0, 3).map((skill) => (
+              <span key={skill} className="badge badge-xs badge-primary">
+                {skill}
+              </span>
+            ))}
+            {categories?.slice(0, 2).map((cat) => (
+              <span key={cat} className="badge badge-xs badge-accent">
+                {cat}
+              </span>
+            ))}
+            {focusAreas?.slice(0, 2).map((area) => (
+              <span key={area} className="badge badge-xs badge-info">
+                {area}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Funding info */}
+        {(ticketSize || fundingNeeded) && (
+          <p className="text-xs font-medium text-primary mt-1">
+            💰 {ticketSize || fundingNeeded}
+          </p>
+        )}
+
       </div>
     </div>
   );

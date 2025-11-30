@@ -26,6 +26,7 @@ const RadarPage = () => {
   console.log(data)
 
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
+  const [focusedSignalId, setFocusedSignalId] = useState<number | null>(null);
   const [filterType, setFilterType] = useState<string | null>(null);
 
   // Konwertuj matches z MatchApiResponse na tablicę Signal[]
@@ -70,6 +71,7 @@ const RadarPage = () => {
             userSignal={data.user_signal}
             matches={filteredMatches}
             onSignalClick={setSelectedSignal}
+            focusedSignalId={focusedSignalId}
             className="w-full h-full"
           />
         </div>
@@ -102,7 +104,8 @@ const RadarPage = () => {
       <div className="absolute right-0 top-0 bottom-0 z-20 flex items-end pointer-events-none">
         <MatchesList
           matches={filteredMatches}
-          onSignalClick={setSelectedSignal}
+          onSignalFocus={(signal) => setFocusedSignalId(signal.id)}
+          onSignalDetails={setSelectedSignal}
         />
       </div>
 

@@ -42,6 +42,7 @@ interface RadarChartProps {
   userSignal: Signal;
   matches: Signal[];
   onSignalClick?: (signal: Signal) => void;
+  focusedSignalId?: number | null;
   className?: string;
 }
 
@@ -72,12 +73,14 @@ const RadarChart = ({
   userSignal,
   matches,
   onSignalClick,
+  focusedSignalId,
   className = "",
 }: RadarChartProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredSignal, setHoveredSignal] = useState<Signal | null>(null);
+  const [hoveredSignalPosition, setHoveredSignalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isHoveringUserBlip, setIsHoveringUserBlip] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [blipPositions, setBlipPositions] = useState<BlipPosition[]>([]);
@@ -171,6 +174,33 @@ console.log(userSignal)
 
     setBlipPositions(positions);
   }, [matches, getBaseRadius]);
+
+  // Focus on a specific signal when focusedSignalId changes
+  useEffect(() => {
+    if (focusedSignalId === null || focusedSignalId === undefined) return;
+    
+    const focusedPosition = blipPositions.find(
+      (pos) => pos.signal.id === focusedSignalId
+    );
+    
+    if (focusedPosition) {
+      // Center the view on the focused signal and zoom in slightly
+      setTargetView({
+        offsetX: -focusedPosition.x,
+        offsetY: -focusedPosition.y,
+        scale: 1.8, // Zoom in when focusing
+      });
+      
+      // Set the hovered signal to show tooltip
+      setHoveredSignal(focusedPosition.signal);
+      
+      // Calculate screen position for tooltip (after animation, it will be centered)
+      // We set position to center of screen since the signal will be centered there
+      const centerX = dimensions.width / 2;
+      const centerY = dimensions.height / 2;
+      setHoveredSignalPosition({ x: centerX, y: centerY });
+    }
+  }, [focusedSignalId, blipPositions, dimensions]);
 
   // Convert world coordinates to screen coordinates
   const worldToScreen = useCallback(
@@ -370,25 +400,6 @@ console.log(userSignal)
       ctx.strokeStyle = newHoverState > 0.5 ? colors.blipBorder : colors.blipBorderFaded;
       ctx.lineWidth = lerp(1, 2, newHoverState);
       ctx.stroke();
-
-      // Match score text for hovered blip or when zoomed in
-      const textOpacity = Math.max(newHoverState, view.scale > 1.2 ? 1 : 0);
-      if (textOpacity > 0.01) {
-        ctx.globalAlpha = textOpacity;
-        ctx.fillStyle = colors.text;
-        ctx.font = `bold ${Math.max(10, 12 * view.scale)}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.fillText(
-          `${Math.round((signal.match_score ?? 0) * 100)}%`,
-          x,
-          y - blipRadius - 8
-        );
-        if (newHoverState > 0.5 || view.scale > 1.5) {
-          const title = signal.details?.title ?? "Sygnał";
-          ctx.fillText(title.substring(0, 20), x, y + blipRadius + 16);
-        }
-        ctx.globalAlpha = 1;
-      }
     });
 
     // Draw user signal in center
@@ -422,12 +433,6 @@ console.log(userSignal)
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // "TY" label
-    ctx.fillStyle = colors.userLabel;
-    ctx.font = `bold ${Math.max(12, 14 * view.scale)}px sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("TY", cx, cy);
 
     // Request next frame
     animationRef.current = requestAnimationFrame(drawRadar);
@@ -554,6 +559,12 @@ console.log(userSignal)
     });
 
     setHoveredSignal(hoveredBlip?.signal || null);
+    if (hoveredBlip) {
+      const { x, y } = worldToScreen(hoveredBlip.x, hoveredBlip.y, view);
+      setHoveredSignalPosition({ x, y });
+    } else {
+      setHoveredSignalPosition(null);
+    }
     canvas.style.cursor = (hoveredBlip || isOverUserBlip) ? "pointer" : "grab";
   };
 
@@ -674,6 +685,95 @@ console.log(userSignal)
               </div>
             )}
             <p className="text-xs text-base-content/50 mt-3">Kliknij, aby zobaczyć szczegóły</p>
+          </div>
+        </div>
+      )}
+
+      {/* Matched Signal Tooltip */}
+      {hoveredSignal && hoveredSignalPosition && !isHoveringUserBlip && (
+        <div 
+          className="absolute z-30 pointer-events-none"
+          style={{
+            left: hoveredSignalPosition.x,
+            top: hoveredSignalPosition.y,
+            transform: 'translate(-50%, -100%)',
+            marginTop: '-20px',
+          }}
+        >
+          <div className="bg-base-100 border border-base-300 rounded-xl shadow-xl p-4 min-w-72 max-w-sm animate-fade-in">
+            <div className="flex items-center gap-2 mb-2">
+              <div
+                className="w-3 h-3 rounded-full shrink-0"
+                style={{ backgroundColor: signalTypeColors[getSignalType(hoveredSignal)] }}
+              />
+              <span className="font-bold text-base-content">
+                {signalTypeLabels[getSignalType(hoveredSignal)]}
+              </span>
+              {hoveredSignal.match_score !== undefined && (
+                <span className="badge badge-success badge-sm ml-auto">
+                  {Math.round(hoveredSignal.match_score * 100)}%
+                </span>
+              )}
+            </div>
+            <h3 className="font-semibold text-base text-base-content mb-1 break-words">
+              {hoveredSignal.details?.title || hoveredSignal.details?.name || getSignalTitle(hoveredSignal.details)}
+            </h3>
+            {hoveredSignal.username && (
+              <p className="text-xs text-base-content/60 mb-2">
+                @{hoveredSignal.username}
+              </p>
+            )}
+            {hoveredSignal.details?.description && (
+              <p className="text-sm text-base-content/70 line-clamp-2 break-words">
+                {hoveredSignal.details.description}
+              </p>
+            )}
+            {/* Skills for freelancer */}
+            {hoveredSignal.details?.skills && hoveredSignal.details.skills.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {hoveredSignal.details.skills.slice(0, 4).map((skill) => (
+                  <span key={skill} className="badge badge-xs badge-primary">
+                    {skill}
+                  </span>
+                ))}
+                {hoveredSignal.details.skills.length > 4 && (
+                  <span className="badge badge-xs badge-ghost">+{hoveredSignal.details.skills.length - 4}</span>
+                )}
+              </div>
+            )}
+            {/* Categories */}
+            {hoveredSignal.details?.categories && hoveredSignal.details.categories.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {hoveredSignal.details.categories.slice(0, 3).map((cat) => (
+                  <span key={cat} className="badge badge-xs badge-accent">
+                    {cat}
+                  </span>
+                ))}
+              </div>
+            )}
+            {/* Investor: focus areas */}
+            {hoveredSignal.details?.focus_areas && hoveredSignal.details.focus_areas.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {hoveredSignal.details.focus_areas.slice(0, 3).map((area) => (
+                  <span key={area} className="badge badge-xs badge-info">
+                    {area}
+                  </span>
+                ))}
+              </div>
+            )}
+            {/* Investor: ticket size */}
+            {hoveredSignal.details?.ticket_size && (
+              <p className="text-xs font-medium text-primary mt-2">
+                💰 {hoveredSignal.details.ticket_size}
+              </p>
+            )}
+            {/* Idea: funding needed */}
+            {hoveredSignal.details?.funding_needed && (
+              <p className="text-xs font-medium text-primary mt-2">
+                💰 {hoveredSignal.details.funding_needed}
+              </p>
+            )}
+            <p className="text-xs text-base-content/40 mt-3 border-t border-base-300 pt-2">Kliknij, aby zobaczyć szczegóły</p>
           </div>
         </div>
       )}

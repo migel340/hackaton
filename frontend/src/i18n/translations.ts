@@ -21,6 +21,10 @@ export const translations = {
     openMatchList: "Otwórz listę dopasowań",
     all: "Wszystkie",
     matchScore: "Dopasowanie",
+    radar: {
+      focusOnRadar: "Pokaż",
+      details: "Szczegóły",
+    },
 
     // Signal Types
     investor: "Inwestor",
@@ -153,6 +157,10 @@ export const translations = {
     openMatchList: "Open matches list",
     all: "All",
     matchScore: "Match",
+    radar: {
+      focusOnRadar: "Focus",
+      details: "Details",
+    },
 
     // Signal Types
     investor: "Investor",
