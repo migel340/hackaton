@@ -137,9 +137,17 @@ console.log(userSignal)
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
+  // Calculate base radius based on screen dimensions
+  const getBaseRadius = useCallback(() => {
+    const { width, height } = dimensions;
+    const minDimension = Math.min(width, height);
+    // Use 42% of the smaller dimension for the radar radius
+    return minDimension * 0.42;
+  }, [dimensions]);
+
   // Calculate blip positions (in world coordinates, centered at 0,0)
   useEffect(() => {
-    const baseRadius = 270; // Base radius in world coordinates (reduced by 10%)
+    const baseRadius = getBaseRadius();
 
     const positions: BlipPosition[] = matches.map((signal, index) => {
       // Odległość od środka jest odwrotnością match_score
@@ -162,7 +170,7 @@ console.log(userSignal)
     });
 
     setBlipPositions(positions);
-  }, [matches]);
+  }, [matches, getBaseRadius]);
 
   // Convert world coordinates to screen coordinates
   const worldToScreen = useCallback(
@@ -213,7 +221,7 @@ console.log(userSignal)
     const view = current;
 
     const { width, height } = dimensions;
-    const baseRadius = 270; // Reduced by 10%
+    const baseRadius = getBaseRadius();
 
     // Clear canvas with theme-aware background
     ctx.fillStyle = colors.background;
