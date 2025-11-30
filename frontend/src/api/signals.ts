@@ -310,14 +310,43 @@ export async function getMySignals(): Promise<Signal[]> {
   }
 }
 
+// Mapowanie typu sygnału na signal_category_id
+const signalTypeToCategory: Record<SignalType, number> = {
+  freelancer: 1,
+  idea: 2,
+  investor: 3,
+};
+
+export interface CreateSignalRequest {
+  signal_category_id: number;
+  details: Record<string, unknown>;
+}
+
+export interface CreateSignalResponse {
+  id: number;
+  user_id: number;
+  signal_category_id: number;
+  details: Record<string, unknown> | null;
+  created_at: string;
+  is_active: boolean;
+}
+
 /**
  * Tworzy nowy sygnał
+ * @param type - typ sygnału: 'freelancer' | 'idea' | 'investor'
+ * @param details - szczegóły sygnału (dowolny JSON)
  */
-export async function createSignal(data: Omit<Signal, "id" | "match_score" | "user_id">): Promise<Signal> {
-  try {
-    return await api.post<Signal>("/signals", data);
-  } catch (error) {
-    console.error("Error creating signal:", error);
-    throw error;
-  }
+export async function createSignal(
+  type: SignalType,
+  details: Record<string, unknown>
+): Promise<CreateSignalResponse> {
+  const payload: CreateSignalRequest = {
+    signal_category_id: signalTypeToCategory[type],
+    details,
+  };
+
+  console.log("createSignal - calling api.post with payload:", payload);
+  const result = await api.post<CreateSignalResponse>("/signals", payload);
+  console.log("createSignal - result:", result);
+  return result;
 }
