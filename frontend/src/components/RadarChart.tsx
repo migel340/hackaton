@@ -41,8 +41,9 @@ const RadarChart = ({
   const sweepAngleRef = useRef(0);
 
   // View state for pan and zoom
+  // offsetX: -128 kompensuje ml-64 (256px / 2 = 128px) żeby graf był na środku ekranu
   const [view, setView] = useState<ViewState>({
-    offsetX: 0,
+    offsetX: -128,
     offsetY: 0,
     scale: 1,
   });
@@ -66,7 +67,7 @@ const RadarChart = ({
 
   // Calculate blip positions (in world coordinates, centered at 0,0)
   useEffect(() => {
-    const baseRadius = 300; // Base radius in world coordinates
+    const baseRadius = 270; // Base radius in world coordinates (reduced by 10%)
 
     const positions: BlipPosition[] = matches.map((signal, index) => {
       // Odległość od środka jest odwrotnością match_score
@@ -127,7 +128,7 @@ const RadarChart = ({
     if (!ctx) return;
 
     const { width, height } = dimensions;
-    const baseRadius = 300;
+    const baseRadius = 270; // Reduced by 10%
 
     // Clear canvas with light background
     ctx.fillStyle = "#f8fafc";
@@ -442,7 +443,7 @@ const RadarChart = ({
 
   // Reset view
   const handleReset = () => {
-    setView({ offsetX: 0, offsetY: 0, scale: 1 });
+    setView({ offsetX: -128, offsetY: 0, scale: 1 });
   };
 
   return (
