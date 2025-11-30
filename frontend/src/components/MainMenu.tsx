@@ -51,7 +51,7 @@ const MainMenu = () => {
           onClick={() => setLanguage(language === "pl" ? "en" : "pl")}
           className="btn btn-ghost w-full justify-start gap-2"
         >
-          <span className="text-xl">{language === "pl" ? "🇵🇱" : "🇬🇧"}</span>
+          <span className="text-xl">{language === "pl" ? "🇬🇧" : "🇵🇱"}</span>
           {language === "pl" ? "English" : "Polski"}
         </button>
         

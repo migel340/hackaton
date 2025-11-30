@@ -27,7 +27,7 @@ export const RadarHeader = ({
   
   return (
     <div className="relative flex items-center justify-between gap-10 z-10">
-      <div className="flex items-center gap-3 bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2">
+      <div className="flex items-center gap-3 bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-base-content/20 shadow-md">
         <div>
           <h1 className="font-bold text-lg">{t.radarTitle}</h1>
           <p className="text-xs text-base-content/60">
@@ -36,7 +36,7 @@ export const RadarHeader = ({
         </div>
       </div>
 
-      <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-3">
+      <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-base-content/20 shadow-md flex items-center gap-3">
         <span className="text-sm font-medium">{t.yourActivity}</span>
         <select
           className="select select-sm select-bordered bg-base-100 min-w-[200px]"
@@ -55,7 +55,7 @@ export const RadarHeader = ({
         </select>
       </div>
 
-      <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
+      <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-base-content/20 shadow-md flex items-center gap-2">
         <span className="text-sm font-medium">{t.type}</span>
         <span className={`badge ${signalTypeTextColors[signalType]}`}>
           {signalTypeLabels[signalType as keyof typeof signalTypeLabels]}
