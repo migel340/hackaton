@@ -1,9 +1,12 @@
+import { useLanguage } from "@/i18n";
+
 interface RadarErrorStateProps {
   error?: string | null;
   onRetry: () => void;
 }
 
 export const RadarErrorState = ({ error, onRetry }: RadarErrorStateProps) => {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
       <div className="alert alert-error max-w-md">
@@ -20,10 +23,10 @@ export const RadarErrorState = ({ error, onRetry }: RadarErrorStateProps) => {
             d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <span>{error || "Brak danych"}</span>
+        <span>{error || t.noData}</span>
       </div>
       <button className="btn btn-primary mt-4" onClick={onRetry}>
-        Spróbuj ponownie
+        {t.retry}
       </button>
     </div>
   );

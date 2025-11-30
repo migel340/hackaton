@@ -1,7 +1,7 @@
 import type { Signal } from "@/api/signals";
 import { getSignalType } from "@/api/signals";
-import { signalTypeLabels } from "@/feature/signals/signalSchema";
 import { signalTypeTextColors } from "./signalTypeColors";
+import { useLanguage } from "@/i18n";
 
 interface RadarHeaderProps {
   userSignal: Signal;
@@ -16,21 +16,28 @@ export const RadarHeader = ({
   selectedUserSignalId,
   onUserSignalChange,
 }: RadarHeaderProps) => {
+  const { t } = useLanguage();
   const signalType = getSignalType(userSignal);
+  
+  const signalTypeLabels = {
+    investor: t.investor,
+    freelancer: t.freelancer,
+    idea: t.idea,
+  };
   
   return (
     <div className="relative flex items-center justify-between gap-10 z-10">
-      <div className="flex items-center gap-3 bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2">
+      <div className="flex items-center gap-3 bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-base-content/20 shadow-md">
         <div>
-          <h1 className="font-bold text-lg">Radar Dopasowań</h1>
+          <h1 className="font-bold text-lg">{t.radarTitle}</h1>
           <p className="text-xs text-base-content/60">
-            Kliknij sygnał, aby zobaczyć szczegóły
+            {t.radarSubtitle}
           </p>
         </div>
       </div>
 
-      <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-3">
-        <span className="text-sm font-medium">Twoja aktywność:</span>
+      <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-base-content/20 shadow-md flex items-center gap-3">
+        <span className="text font-medium whitespace-nowrap">{t.yourActivity}</span>
         <select
           className="select select-sm select-bordered bg-base-100 min-w-[200px]"
           value={selectedUserSignalId || ""}
@@ -48,8 +55,8 @@ export const RadarHeader = ({
         </select>
       </div>
 
-      <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
-        <span className="text-sm font-medium">Typ:</span>
+      <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-base-content/20 shadow-md flex items-center gap-2">
+        <span className="text-sm font-medium">{t.type}</span>
         <span className={`badge ${signalTypeTextColors[signalType]}`}>
           {signalTypeLabels[signalType as keyof typeof signalTypeLabels]}
         </span>

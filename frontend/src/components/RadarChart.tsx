@@ -1,16 +1,49 @@
 import { useRef, useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import type { Signal } from "@/api/signals";
-import { getSignalType } from "@/api/signals";
+import { getSignalType, getSignalTitle } from "@/api/signals";
 import { signalTypeLabels } from "@/feature/signals/signalSchema";
 import {
   signalTypeColors,
   signalTypeColorsHover,
 } from "@/feature/signals/radar/signalTypeColors";
+import { useLanguage } from "@/i18n";
+
+// Theme colors
+const themeColors = {
+  light: {
+    background: "#f8fafc",
+    grid: "rgba(100, 116, 139, 0.1)",
+    ring: (i: number, ringCount: number) => `rgba(59, 130, 246, ${0.2 + (ringCount - i) * 0.05})`,
+    ringLabel: "rgba(59, 130, 246, 0.7)",
+    crossLine: "rgba(59, 130, 246, 0.15)",
+    sweepStart: "rgba(59, 130, 246, 0.4)",
+    sweepEnd: "rgba(59, 130, 246, 0)",
+    blipBorder: "#1e293b",
+    blipBorderFaded: "rgba(30,41,59,0.3)",
+    text: "#1e293b",
+    userLabel: "#fff",
+  },
+  dark: {
+    background: "#0f172a",
+    grid: "rgba(148, 163, 184, 0.1)",
+    ring: (i: number, ringCount: number) => `rgba(96, 165, 250, ${0.25 + (ringCount - i) * 0.05})`,
+    ringLabel: "rgba(96, 165, 250, 0.8)",
+    crossLine: "rgba(96, 165, 250, 0.2)",
+    sweepStart: "rgba(96, 165, 250, 0.5)",
+    sweepEnd: "rgba(96, 165, 250, 0)",
+    blipBorder: "#e2e8f0",
+    blipBorderFaded: "rgba(226,232,240,0.3)",
+    text: "#e2e8f0",
+    userLabel: "#1e293b",
+  },
+};
 
 interface RadarChartProps {
   userSignal: Signal;
   matches: Signal[];
   onSignalClick?: (signal: Signal) => void;
+  focusedSignalId?: number | null;
   className?: string;
 }
 
@@ -41,25 +74,50 @@ const RadarChart = ({
   userSignal,
   matches,
   onSignalClick,
+  focusedSignalId,
   className = "",
 }: RadarChartProps) => {
+  const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredSignal, setHoveredSignal] = useState<Signal | null>(null);
+  const [hoveredSignalPosition, setHoveredSignalPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isHoveringUserBlip, setIsHoveringUserBlip] = useState(false);
+  const [isFocusLocked, setIsFocusLocked] = useState(false);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [blipPositions, setBlipPositions] = useState<BlipPosition[]>([]);
   const animationRef = useRef<number>(0);
   const sweepAngleRef = useRef(0);
+console.log(userSignal)
+  // Theme state
+  const [isDark, setIsDark] = useState(() => {
+    return document.documentElement.getAttribute("data-theme") === "dark";
+  });
+
+  // Listen for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "data-theme") {
+          setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  const colors = isDark ? themeColors.dark : themeColors.light;
 
   // Animated view state - target is where we want to go, current is interpolated
-  // offsetX: -128 kompensuje ml-64 (256px / 2 = 128px) żeby graf był na środku ekranu
   const [targetView, setTargetView] = useState<ViewState>({
-    offsetX: -128,
+    offsetX: -160,
     offsetY: 0,
     scale: 1,
   });
   const currentViewRef = useRef<ViewState>({
-    offsetX: -128,
+    offsetX: -160,
     offsetY: 0,
     scale: 1,
   });
@@ -85,9 +143,17 @@ const RadarChart = ({
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
+  // Calculate base radius based on screen dimensions
+  const getBaseRadius = useCallback(() => {
+    const { width, height } = dimensions;
+    const minDimension = Math.min(width, height);
+    // Use 42% of the smaller dimension for the radar radius
+    return minDimension * 0.42;
+  }, [dimensions]);
+
   // Calculate blip positions (in world coordinates, centered at 0,0)
   useEffect(() => {
-    const baseRadius = 270; // Base radius in world coordinates (reduced by 10%)
+    const baseRadius = getBaseRadius();
 
     const positions: BlipPosition[] = matches.map((signal, index) => {
       // Odległość od środka jest odwrotnością match_score
@@ -110,7 +176,35 @@ const RadarChart = ({
     });
 
     setBlipPositions(positions);
-  }, [matches]);
+  }, [matches, getBaseRadius]);
+
+  // Focus on a specific signal when focusedSignalId changes
+  useEffect(() => {
+    if (focusedSignalId === null || focusedSignalId === undefined) return;
+    
+    const focusedPosition = blipPositions.find(
+      (pos) => pos.signal.id === focusedSignalId
+    );
+    
+    if (focusedPosition) {
+      // Center the view on the focused signal and zoom in slightly
+      setTargetView({
+        offsetX: -focusedPosition.x,
+        offsetY: -focusedPosition.y,
+        scale: 1.8, // Zoom in when focusing
+      });
+      
+      // Set the hovered signal to show tooltip and lock it
+      setHoveredSignal(focusedPosition.signal);
+      setIsFocusLocked(true);
+      
+      // Calculate screen position for tooltip (after animation, it will be centered)
+      // We set position to center of screen since the signal will be centered there
+      const centerX = dimensions.width / 2;
+      const centerY = dimensions.height / 2;
+      setHoveredSignalPosition({ x: centerX, y: centerY });
+    }
+  }, [focusedSignalId, blipPositions, dimensions]);
 
   // Convert world coordinates to screen coordinates
   const worldToScreen = useCallback(
@@ -161,17 +255,17 @@ const RadarChart = ({
     const view = current;
 
     const { width, height } = dimensions;
-    const baseRadius = 270; // Reduced by 10%
+    const baseRadius = getBaseRadius();
 
-    // Clear canvas with light background
-    ctx.fillStyle = "#f8fafc";
+    // Clear canvas with theme-aware background
+    ctx.fillStyle = colors.background;
     ctx.fillRect(0, 0, width, height);
 
     // Draw grid pattern (infinite grid effect)
     const gridSize = 50 * view.scale;
     const { x: originX, y: originY } = worldToScreen(0, 0, view);
 
-    ctx.strokeStyle = "rgba(100, 116, 139, 0.1)";
+    ctx.strokeStyle = colors.grid;
     ctx.lineWidth = 1;
 
     // Vertical lines
@@ -200,14 +294,14 @@ const RadarChart = ({
 
       ctx.beginPath();
       ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-      ctx.strokeStyle = `rgba(59, 130, 246, ${0.2 + (ringCount - i) * 0.05})`;
+      ctx.strokeStyle = colors.ring(i, ringCount);
       ctx.lineWidth = 1;
       ctx.stroke();
 
       // Add percentage labels on rings
       if (i < ringCount && view.scale > 0.5) {
         const percent = Math.round((1 - i / ringCount) * 100);
-        ctx.fillStyle = "rgba(59, 130, 246, 0.7)";
+        ctx.fillStyle = colors.ringLabel;
         ctx.font = `${Math.max(10, 12 * view.scale)}px sans-serif`;
         ctx.fillText(`${percent}%`, cx + radius + 5, cy - 5);
       }
@@ -217,7 +311,7 @@ const RadarChart = ({
     const { x: cx, y: cy } = worldToScreen(0, 0, view);
     const maxDrawRadius = baseRadius * view.scale;
 
-    ctx.strokeStyle = "rgba(59, 130, 246, 0.15)";
+    ctx.strokeStyle = colors.crossLine;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(cx - maxDrawRadius, cy);
@@ -242,8 +336,8 @@ const RadarChart = ({
     const sweepEndY = cy + maxDrawRadius * Math.sin(sweepAngleRef.current);
 
     const gradient = ctx.createLinearGradient(cx, cy, sweepEndX, sweepEndY);
-    gradient.addColorStop(0, "rgba(59, 130, 246, 0.4)");
-    gradient.addColorStop(1, "rgba(59, 130, 246, 0)");
+    gradient.addColorStop(0, colors.sweepStart);
+    gradient.addColorStop(1, colors.sweepEnd);
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -306,29 +400,10 @@ const RadarChart = ({
       ctx.fillStyle = color;
       ctx.fill();
 
-      // Border (animates thickness)
-      ctx.strokeStyle = newHoverState > 0.5 ? "#1e293b" : "rgba(30,41,59,0.3)";
-      ctx.lineWidth = lerp(1, 2, newHoverState);
+      // // Border (animates thickness)
+      // ctx.strokeStyle = newHoverState > 0.5 ? colors.blipBorder : colors.blipBorderFaded;
+      // ctx.lineWidth = lerp(1, 2, newHoverState);
       ctx.stroke();
-
-      // Match score text for hovered blip or when zoomed in
-      const textOpacity = Math.max(newHoverState, view.scale > 1.2 ? 1 : 0);
-      if (textOpacity > 0.01) {
-        ctx.globalAlpha = textOpacity;
-        ctx.fillStyle = "#1e293b";
-        ctx.font = `bold ${Math.max(10, 12 * view.scale)}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.fillText(
-          `${Math.round((signal.match_score ?? 0) * 100)}%`,
-          x,
-          y - blipRadius - 8
-        );
-        if (newHoverState > 0.5 || view.scale > 1.5) {
-          const title = signal.details?.title ?? "Sygnał";
-          ctx.fillText(title.substring(0, 20), x, y + blipRadius + 16);
-        }
-        ctx.globalAlpha = 1;
-      }
     });
 
     // Draw user signal in center
@@ -358,16 +433,8 @@ const RadarChart = ({
     ctx.arc(cx, cy, userRadius, 0, 2 * Math.PI);
     ctx.fillStyle = userColor;
     ctx.fill();
-    ctx.strokeStyle = "#1e293b";
-    ctx.lineWidth = 3;
     ctx.stroke();
 
-    // "TY" label
-    ctx.fillStyle = "#fff";
-    ctx.font = `bold ${Math.max(12, 14 * view.scale)}px sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("TY", cx, cy);
 
     // Request next frame
     animationRef.current = requestAnimationFrame(drawRadar);
@@ -378,6 +445,7 @@ const RadarChart = ({
     userSignal,
     targetView,
     worldToScreen,
+    colors,
   ]);
 
   useEffect(() => {
@@ -439,6 +507,8 @@ const RadarChart = ({
       // Left click
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
+      // Unlock focus when starting to pan
+      setIsFocusLocked(false);
     }
   };
 
@@ -478,6 +548,13 @@ const RadarChart = ({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
+    // Check if mouse is over user blip (center)
+    const { x: centerX, y: centerY } = worldToScreen(0, 0, view);
+    const userRadius = 22 * Math.min(view.scale, 1.5);
+    const distanceToCenter = Math.sqrt((mouseX - centerX) ** 2 + (mouseY - centerY) ** 2);
+    const isOverUserBlip = distanceToCenter < userRadius;
+    setIsHoveringUserBlip(isOverUserBlip);
+
     // Check if mouse is over any blip
     const hoveredBlip = blipPositions.find(({ x: worldX, y: worldY }) => {
       const { x, y } = worldToScreen(worldX, worldY, view);
@@ -485,20 +562,45 @@ const RadarChart = ({
       return distance < 20 * Math.min(view.scale, 1.5);
     });
 
-    setHoveredSignal(hoveredBlip?.signal || null);
-    canvas.style.cursor = hoveredBlip ? "pointer" : "grab";
+    // If we have a locked focus, only update if hovering a different blip
+    if (hoveredBlip) {
+      // Hovering a blip - update to this one and unlock focus
+      setHoveredSignal(hoveredBlip.signal);
+      setIsFocusLocked(false);
+      const { x, y } = worldToScreen(hoveredBlip.x, hoveredBlip.y, view);
+      setHoveredSignalPosition({ x, y });
+    } else if (!isFocusLocked) {
+      // Not hovering any blip and no focus lock - clear tooltip
+      setHoveredSignal(null);
+      setHoveredSignalPosition(null);
+    }
+    // If isFocusLocked and not hovering any blip - keep the current tooltip
+    
+    canvas.style.cursor = (hoveredBlip || isOverUserBlip) ? "pointer" : "grab";
   };
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isPanning) return;
 
     const canvas = canvasRef.current;
-    if (!canvas || !onSignalClick) return;
+    if (!canvas) return;
 
     const view = currentViewRef.current;
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
+
+    // Check if clicked on user blip (center)
+    const { x: centerX, y: centerY } = worldToScreen(0, 0, view);
+    const userRadius = 22 * Math.min(view.scale, 1.5);
+    const distanceToCenter = Math.sqrt((mouseX - centerX) ** 2 + (mouseY - centerY) ** 2);
+    if (distanceToCenter < userRadius) {
+      setIsUserModalOpen(true);
+      return;
+    }
+
+    // Check if clicked on any other blip
+    if (!onSignalClick) return;
 
     const clickedBlip = blipPositions.find(({ x: worldX, y: worldY }) => {
       const { x, y } = worldToScreen(worldX, worldY, view);
@@ -508,12 +610,17 @@ const RadarChart = ({
 
     if (clickedBlip) {
       onSignalClick(clickedBlip.signal);
+    } else {
+      // Clicked on empty space - unlock focus and clear tooltip
+      setIsFocusLocked(false);
+      setHoveredSignal(null);
+      setHoveredSignalPosition(null);
     }
   };
 
   // Reset view with smooth animation
   const handleReset = () => {
-    setTargetView({ offsetX: -128, offsetY: 0, scale: 1 });
+    setTargetView({ offsetX: -160, offsetY: 0, scale: 1 });
   };
 
   return (
@@ -526,45 +633,202 @@ const RadarChart = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={() => {
           setHoveredSignal(null);
+          setIsHoveringUserBlip(false);
           setIsPanning(false);
         }}
         onMouseMove={handleMouseMove}
         onClick={handleClick}
         className="absolute inset-0 cursor-grab"
       />
+
+      {/* User Signal Tooltip */}
+      {isHoveringUserBlip && userSignal && (
+        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-full -mt-16 z-30 pointer-events-none">
+          <div className="bg-base-100 border border-base-300 rounded-xl shadow-xl p-4 min-w-96 max-w-lg animate-fade-in">
+            <div className="flex items-center gap-2 mb-2">
+              <div
+                className="w-3 h-3 rounded-full shrink-0"
+                style={{ backgroundColor: signalTypeColors[getSignalType(userSignal)] }}
+              />
+              <span className="font-bold text-base-content">
+                {signalTypeLabels[getSignalType(userSignal)]}
+              </span>
+            </div>
+            <h3 className="font-semibold text-lg text-base-content mb-1 break-words">
+              {userSignal.details?.name || userSignal.details?.title || getSignalTitle(userSignal.details)}
+            </h3>
+            {userSignal.details?.description && (
+              <p className="text-sm text-base-content/70 line-clamp-3 break-words">
+                {userSignal.details.description}
+              </p>
+            )}
+            {/* Idea: stage + looking_for */}
+            {userSignal.details?.stage && typeof userSignal.details.stage === 'string' && (
+              <div className="mt-2">
+                <span className="badge badge-sm badge-info">{userSignal.details.stage}</span>
+              </div>
+            )}
+            {userSignal.details?.looking_for && Array.isArray(userSignal.details.looking_for) && userSignal.details.looking_for.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {userSignal.details.looking_for.slice(0, 3).map((item, i) => (
+                  <span key={i} className="badge badge-sm badge-secondary">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )}
+            {userSignal.details?.funding_needed && (
+              <p className="text-sm font-semibold text-primary mt-2">{userSignal.details.funding_needed}</p>
+            )}
+            {/* Freelancer: skills */}
+            {userSignal.details?.skills && userSignal.details.skills.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {userSignal.details.skills.slice(0, 5).map((skill) => (
+                  <span key={skill} className="badge badge-sm badge-primary">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            )}
+            {/* Categories */}
+            {userSignal.details?.categories && userSignal.details.categories.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {userSignal.details.categories.slice(0, 3).map((cat) => (
+                  <span key={cat} className="badge badge-sm badge-accent">
+                    {cat}
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-base-content/50 mt-3">Kliknij, aby zobaczyć szczegóły</p>
+          </div>
+        </div>
+      )}
+
+      {/* Matched Signal Tooltip */}
+      {hoveredSignal && hoveredSignalPosition && !isHoveringUserBlip && (
+        <div 
+          className="absolute z-30 pointer-events-none"
+          style={{
+            left: hoveredSignalPosition.x,
+            top: hoveredSignalPosition.y,
+            transform: 'translate(-50%, -100%)',
+            marginTop: '-20px',
+          }}
+        >
+          <div className="bg-base-100 border border-base-300 rounded-xl shadow-xl p-4 min-w-72 max-w-sm animate-fade-in">
+            <div className="flex items-center gap-2 mb-2">
+              <div
+                className="w-3 h-3 rounded-full shrink-0"
+                style={{ backgroundColor: signalTypeColors[getSignalType(hoveredSignal)] }}
+              />
+              <span className="font-bold text-base-content">
+                {signalTypeLabels[getSignalType(hoveredSignal)]}
+              </span>
+              {hoveredSignal.match_score !== undefined && (
+                <span className="badge badge-success badge-sm ml-auto">
+                  {Math.round(hoveredSignal.match_score * 100)}%
+                </span>
+              )}
+            </div>
+            <h3 className="font-semibold text-base text-base-content mb-1 break-words">
+              {hoveredSignal.details?.title || hoveredSignal.details?.name || getSignalTitle(hoveredSignal.details)}
+            </h3>
+            {hoveredSignal.username && (
+              <p className="text-xs text-base-content/60 mb-2">
+                @{hoveredSignal.username}
+              </p>
+            )}
+            {hoveredSignal.details?.description && (
+              <p className="text-sm text-base-content/70 line-clamp-2 break-words">
+                {hoveredSignal.details.description}
+              </p>
+            )}
+            {/* Skills for freelancer */}
+            {hoveredSignal.details?.skills && hoveredSignal.details.skills.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {hoveredSignal.details.skills.slice(0, 4).map((skill) => (
+                  <span key={skill} className="badge badge-xs badge-primary">
+                    {skill}
+                  </span>
+                ))}
+                {hoveredSignal.details.skills.length > 4 && (
+                  <span className="badge badge-xs badge-ghost">+{hoveredSignal.details.skills.length - 4}</span>
+                )}
+              </div>
+            )}
+            {/* Categories */}
+            {hoveredSignal.details?.categories && hoveredSignal.details.categories.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {hoveredSignal.details.categories.slice(0, 3).map((cat) => (
+                  <span key={cat} className="badge badge-xs badge-accent">
+                    {cat}
+                  </span>
+                ))}
+              </div>
+            )}
+            {/* Investor: focus areas */}
+            {hoveredSignal.details?.focus_areas && hoveredSignal.details.focus_areas.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {hoveredSignal.details.focus_areas.slice(0, 3).map((area) => (
+                  <span key={area} className="badge badge-xs badge-info">
+                    {area}
+                  </span>
+                ))}
+              </div>
+            )}
+            {/* Investor: ticket size */}
+            {hoveredSignal.details?.ticket_size && (
+              <p className="text-xs font-medium text-primary mt-2">
+                💰 {hoveredSignal.details.ticket_size}
+              </p>
+            )}
+            {/* Idea: funding needed */}
+            {hoveredSignal.details?.funding_needed && (
+              <p className="text-xs font-medium text-primary mt-2">
+                💰 {hoveredSignal.details.funding_needed}
+              </p>
+            )}
+            <p className="text-xs text-base-content/40 mt-3 border-t border-base-300 pt-2">Kliknij, aby zobaczyć szczegóły</p>
+          </div>
+        </div>
+      )}
+
       {/* Controls */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
-        <button
-          onClick={() =>
-            setTargetView((prev) => ({
-              ...prev,
-              scale: Math.min(5, prev.scale * 1.2),
-            }))
-          }
-          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
-          title="Przybliż"
-        >
-          +
-        </button>
-        <button
-          onClick={() =>
-            setTargetView((prev) => ({
-              ...prev,
-              scale: Math.max(0.2, prev.scale * 0.8),
-            }))
-          }
-          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
-          title="Oddal"
-        >
-          −
-        </button>
-        <button
-          onClick={handleReset}
-          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
-          title="Resetuj widok"
-        >
-          ⟲
-        </button>
+      <div className="absolute bottom-24 left-0 right-0 pr-80 xl:pr-96 flex justify-center pointer-events-none">
+        <div className="flex gap-3 pointer-events-auto">
+          <button
+            onClick={() =>
+              setTargetView((prev) => ({
+                ...prev,
+                scale: Math.min(5, prev.scale * 1.2),
+              }))
+            }
+            className="btn btn-circle btn-lg bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110 text-xl"
+            title="Przybliż"
+          >
+            +
+          </button>
+          <button
+            onClick={handleReset}
+            className="btn btn-circle btn-lg bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110 text-xl"
+            title="Resetuj widok"
+          >
+            ⟲
+          </button>
+          <button
+            onClick={() =>
+              setTargetView((prev) => ({
+                ...prev,
+                scale: Math.max(0.2, prev.scale * 0.8),
+              }))
+            }
+            className="btn btn-circle btn-lg bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110 text-xl"
+            title="Oddal"
+          >
+            −
+          </button>
+        </div>
       </div>
       {/* Zoom indicator */}
       <div className="absolute top-4 left-4 bg-base-300/80 px-3 py-1 rounded-lg backdrop-blur-sm text-sm transition-all duration-300">
@@ -584,9 +848,292 @@ const RadarChart = ({
           ))}
         </div>
         <div className="text-xs text-base-content/50">
-          Scroll aby przybliżyć/oddalić • Przeciągnij aby przesunąć
+          {t.radar?.scrollToZoom} • {t.radar?.dragToMove}
         </div>
       </div>
+
+      {/* User Signal Modal - rendered via Portal to be above everything */}
+      {isUserModalOpen && userSignal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-base-100 rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-base-100 border-b border-base-300 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: signalTypeColors[getSignalType(userSignal)] }}
+                />
+                <span className="font-bold text-lg">
+                  {signalTypeLabels[getSignalType(userSignal)]}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsUserModalOpen(false)}
+                className="btn btn-sm btn-circle btn-ghost"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              {/* Tytuł - name lub title */}
+              {(userSignal.details?.name || userSignal.details?.title) && (
+                <h2 className="text-2xl font-bold text-base-content">
+                  {userSignal.details.name || userSignal.details.title}
+                </h2>
+              )}
+
+              {/* Opis */}
+              {userSignal.details?.description && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Opis</h3>
+                  <p className="text-base-content whitespace-pre-wrap break-words">
+                    {userSignal.details.description}
+                  </p>
+                </div>
+              )}
+
+              {/* === IDEA FIELDS (signal_category_id: 2) === */}
+              {userSignal.details?.stage && typeof userSignal.details.stage === 'string' && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Etap projektu</h3>
+                  <span className="badge badge-info badge-lg">{userSignal.details.stage}</span>
+                </div>
+              )}
+
+              {userSignal.details?.looking_for && Array.isArray(userSignal.details.looking_for) && userSignal.details.looking_for.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Kogo szukamy</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.looking_for.map((item, i) => (
+                      <span key={i} className="badge badge-secondary badge-lg">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userSignal.details?.funding_needed && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Potrzebne finansowanie</h3>
+                  <p className="text-xl font-bold text-primary">{userSignal.details.funding_needed}</p>
+                </div>
+              )}
+
+              {userSignal.details?.market_size && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Wielkość rynku</h3>
+                  <p className="text-base-content">{userSignal.details.market_size}</p>
+                </div>
+              )}
+
+              {userSignal.details?.traction && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Traction</h3>
+                  <p className="text-base-content whitespace-pre-wrap">{userSignal.details.traction}</p>
+                </div>
+              )}
+
+              {userSignal.details?.problem && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Problem</h3>
+                  <p className="text-base-content whitespace-pre-wrap">{userSignal.details.problem}</p>
+                </div>
+              )}
+
+              {userSignal.details?.solution && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Rozwiązanie</h3>
+                  <p className="text-base-content whitespace-pre-wrap">{userSignal.details.solution}</p>
+                </div>
+              )}
+
+              {userSignal.details?.market && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Rynek docelowy</h3>
+                  <p className="text-base-content whitespace-pre-wrap">{userSignal.details.market}</p>
+                </div>
+              )}
+
+              {userSignal.details?.needed_skills && userSignal.details.needed_skills.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Poszukiwane umiejętności</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.needed_skills.map((skill) => (
+                      <span key={skill} className="badge badge-secondary badge-lg">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(userSignal.details?.funding_min || userSignal.details?.funding_max) && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Zakres finansowania</h3>
+                  <p className="text-xl font-bold text-primary">
+                    {userSignal.details.funding_min?.toLocaleString()} - {userSignal.details.funding_max?.toLocaleString()} PLN
+                  </p>
+                </div>
+              )}
+
+              {/* === FREELANCER FIELDS (signal_category_id: 1) === */}
+              {userSignal.details?.skills && userSignal.details.skills.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Umiejętności</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.skills.map((skill) => (
+                      <span key={skill} className="badge badge-primary badge-lg">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userSignal.details?.hourly_rate && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Stawka godzinowa</h3>
+                  <p className="text-xl font-bold text-primary">
+                    {userSignal.details.hourly_rate} PLN/h
+                  </p>
+                </div>
+              )}
+
+              {userSignal.details?.experience && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Doświadczenie</h3>
+                  <p className="text-base-content">{userSignal.details.experience}</p>
+                </div>
+              )}
+
+              {userSignal.details?.availability && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Dostępność</h3>
+                  <p className="text-base-content">{userSignal.details.availability}</p>
+                </div>
+              )}
+
+              {/* === INVESTOR FIELDS (signal_category_id: 3) === */}
+              {userSignal.details?.type && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Typ inwestora</h3>
+                  <p className="text-base-content font-medium">{userSignal.details.type}</p>
+                </div>
+              )}
+
+              {userSignal.details?.ticket_size && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Wielkość inwestycji</h3>
+                  <p className="text-xl font-bold text-primary">{userSignal.details.ticket_size}</p>
+                </div>
+              )}
+
+              {userSignal.details?.investment_stage && userSignal.details.investment_stage.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Preferowane etapy</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.investment_stage.map((s) => (
+                      <span key={s} className="badge badge-info badge-lg">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userSignal.details?.focus_areas && userSignal.details.focus_areas.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Obszary zainteresowań</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.focus_areas.map((area) => (
+                      <span key={area} className="badge badge-warning badge-lg">
+                        {area}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userSignal.details?.criteria && userSignal.details.criteria.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Kryteria inwestycyjne</h3>
+                  <ul className="list-disc list-inside space-y-1">
+                    {userSignal.details.criteria.map((c, i) => (
+                      <li key={i} className="text-base-content">{c}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {userSignal.details?.value_add && userSignal.details.value_add.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Co oferuję</h3>
+                  <ul className="list-disc list-inside space-y-1">
+                    {userSignal.details.value_add.map((v, i) => (
+                      <li key={i} className="text-base-content">{v}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {(userSignal.details?.budget_min || userSignal.details?.budget_max) && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Budżet inwestycji</h3>
+                  <p className="text-xl font-bold text-primary">
+                    {userSignal.details.budget_min?.toLocaleString()} - {userSignal.details.budget_max?.toLocaleString()} PLN
+                  </p>
+                </div>
+              )}
+
+              {/* === COMMON FIELDS === */}
+              {userSignal.details?.categories && userSignal.details.categories.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Kategorie</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.categories.map((cat) => (
+                      <span key={cat} className="badge badge-accent badge-lg">
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Signal metadata */}
+              <div className="divider"></div>
+              <div className="grid grid-cols-2 gap-4 text-sm text-base-content/60">
+                <div>
+                  <span className="font-medium">ID sygnału:</span> {userSignal.id}
+                </div>
+                <div>
+                  <span className="font-medium">Utworzono:</span>{" "}
+                  {new Date(userSignal.created_at).toLocaleDateString("pl-PL")}
+                </div>
+                <div>
+                  <span className="font-medium">Status:</span>{" "}
+                  <span className={userSignal.is_active ? "text-success" : "text-error"}>
+                    {userSignal.is_active ? "Aktywny" : "Nieaktywny"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-base-300 px-6 py-4">
+              <button
+                onClick={() => setIsUserModalOpen(false)}
+                className="btn btn-primary w-full"
+              >
+                Zamknij
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

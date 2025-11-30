@@ -6,9 +6,9 @@ const MainLayout = () => {
     return (
         <div className="drawer lg:drawer-open">
             <input id="main-drawer" type="checkbox" className="drawer-toggle" />
-            <div className="drawer-content flex flex-col ml-64">
-                <div className="navbar bg-base-300">
-                    <div className="flex-none lg:hidden">
+            <div className="drawer-content flex flex-col">
+                <div className="navbar bg-base-300 lg:hidden">
+                    <div className="flex-none">
                         <label htmlFor="main-drawer" className="btn btn-square btn-ghost">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"

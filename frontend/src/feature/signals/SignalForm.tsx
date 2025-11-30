@@ -1,4 +1,3 @@
-
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -7,7 +6,6 @@ import {
   type SignalFormData,
   type SignalType,
   signalTypes,
-  signalTypeLabels,
   categories,
   categoryLabels,
   skills,
@@ -17,6 +15,7 @@ import {
 } from "./signalSchema";
 import RangeSlider from "@components/RangeSlider";
 import BadgeSelect from "@components/Category";
+import { useLanguage } from "@/i18n";
 
 interface SignalFormProps {
   onSubmit: (data: SignalFormData) => void;
@@ -24,7 +23,14 @@ interface SignalFormProps {
 }
 
 const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
+  const { t } = useLanguage();
   const [signalType, setSignalType] = useState<SignalType>("investor");
+
+  const signalTypeLabels = {
+    investor: t.investor,
+    freelancer: t.freelancer,
+    idea: t.idea,
+  };
 
   const {
     register,
@@ -46,7 +52,7 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
 
   const handleTypeChange = (type: SignalType) => {
     setSignalType(type);
-    
+
     if (type === "investor") {
       reset({
         type: "investor",
@@ -86,14 +92,18 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <div className="form-control">
         <label className="label">
-          <span className="label-text font-semibold text-lg">Rodzaj sygnału</span>
+          <span className="label-text font-semibold text-lg">
+            {t.signalType}
+          </span>
         </label>
         <div className="flex flex-wrap gap-2">
           {signalTypes.map((type) => (
             <button
               key={type}
               type="button"
-              className={`btn ${signalType === type ? "btn-primary" : "btn-outline"}`}
+              className={`btn ${
+                signalType === type ? "btn-primary" : "btn-outline"
+              }`}
               onClick={() => handleTypeChange(type)}
             >
               {signalTypeLabels[type]}
@@ -105,53 +115,41 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">Tytuł</span>
+          <span className="label-text">{t.title}</span>
         </label>
         <input
           type="text"
           {...register("title")}
-          className={`input input-bordered w-full ${errors.title ? "input-error" : ""}`}
-          placeholder={
-            signalType === "investor"
-              ? "np. Inwestycja w FinTech"
-              : signalType === "freelancer"
-              ? "np. Senior React Developer"
-              : "np. Innowacyjna platforma EdTech"
-          }
+          className={`input input-bordered w-full ${
+            errors.title ? "input-error" : ""
+          }`}
+          placeholder={t.titlePlaceholder[signalType]}
         />
         {errors.title && (
           <label className="label">
-            <span className="label-text-alt text-error">{errors.title.message}</span>
+            <span className="label-text-alt text-error">
+              {errors.title.message}
+            </span>
           </label>
         )}
       </div>
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">
-            {signalType === "investor"
-              ? "Opis inwestycji"
-              : signalType === "freelancer"
-              ? "Opis umiejętności"
-              : "Opis startupu"}
-          </span>
+          <span className="label-text">{t.descriptionLabel[signalType]}</span>
         </label>
         <textarea
           {...register("description")}
           className={`textarea textarea-bordered w-full h-32 ${
             errors.description ? "textarea-error" : ""
           }`}
-          placeholder={
-            signalType === "investor"
-              ? "Opisz, w jakie projekty chcesz inwestować..."
-              : signalType === "freelancer"
-              ? "Opisz swoje doświadczenie i umiejętności..."
-              : "Opisz swój pomysł na startup..."
-          }
+          placeholder={t.descriptionPlaceholder[signalType]}
         />
         {errors.description && (
           <label className="label">
-            <span className="label-text-alt text-error">{errors.description.message}</span>
+            <span className="label-text-alt text-error">
+              {errors.description.message}
+            </span>
           </label>
         )}
       </div>
@@ -167,7 +165,7 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
                 control={control}
                 render={({ field: maxField }) => (
                   <RangeSlider
-                    label="Budżet inwestycji"
+                    label={t.budgetRange}
                     minValue={Number(minField.value) || 0}
                     maxValue={Number(maxField.value) || 100000}
                     min={0}
@@ -177,7 +175,10 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
                       minField.onChange(min);
                       maxField.onChange(max);
                     }}
-                    error={(errors as any).budget_max?.message || (errors as any).budget_min?.message}
+                    error={
+                      (errors as any).budget_max?.message ||
+                      (errors as any).budget_min?.message
+                    }
                   />
                 )}
               />
@@ -190,19 +191,31 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
         <div className="space-y-4">
           <div className="form-control">
             <label className="label">
-              <span className="label-text">Stawka godzinowa (PLN) - opcjonalnie</span>
+              <span className="label-text">{t.hourlyRate}</span>
             </label>
-            <input
-              type="number"
-              {...register("hourly_rate" as keyof SignalFormData)}
-              className="input input-bordered w-full"
-              placeholder="150"
+            <Controller
+              name={"hourly_rate" as keyof SignalFormData}
+              control={control}
+              render={({ field }) => (
+                <input
+                  type="number"
+                  className="input input-bordered w-full"
+                  placeholder="150"
+                  min="0"
+                  value={field.value ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(val === "" ? undefined : Number(val));
+                  }}
+                  onWheel={(e) => e.currentTarget.blur()}
+                />
+              )}
             />
           </div>
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-semibold">Umiejętności</span>
+              <span className="label-text font-semibold">{t.skills}</span>
             </label>
             <Controller
               name={"skills" as keyof SignalFormData}
@@ -238,7 +251,7 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
                 control={control}
                 render={({ field: maxField }) => (
                   <RangeSlider
-                    label="Potrzebne finansowanie"
+                    label={t.fundingRange}
                     minValue={Number(minField.value) || 0}
                     maxValue={Number(maxField.value) || 500000}
                     min={0}
@@ -248,7 +261,10 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
                       minField.onChange(min);
                       maxField.onChange(max);
                     }}
-                    error={(errors as any).funding_max?.message || (errors as any).funding_min?.message}
+                    error={
+                      (errors as any).funding_max?.message ||
+                      (errors as any).funding_min?.message
+                    }
                   />
                 )}
               />
@@ -257,7 +273,7 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-semibold">Poszukiwani specjaliści</span>
+              <span className="label-text font-semibold">{t.neededSkills}</span>
             </label>
             <Controller
               name={"needed_skills" as keyof SignalFormData}
@@ -284,7 +300,7 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text font-semibold">Kategorie</span>
+          <span className="label-text font-semibold">{t.categories}</span>
         </label>
         <Controller
           name="categories"
@@ -301,7 +317,9 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
         />
         {errors.categories && (
           <label className="label">
-            <span className="label-text-alt text-error">{errors.categories.message}</span>
+            <span className="label-text-alt text-error">
+              {errors.categories.message}
+            </span>
           </label>
         )}
       </div>
@@ -309,10 +327,17 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
       <div className="form-control mt-8">
         <button
           type="submit"
-          className={`btn btn-primary btn-lg w-full ${isLoading ? "loading" : ""}`}
+          className="btn btn-primary btn-lg w-full"
           disabled={isLoading}
         >
-          {isLoading ? "Tworzenie..." : "Utwórz sygnał"}
+          {isLoading ? (
+            <>
+              <span className="loading loading-spinner loading-sm"></span>
+              {t.submitting}
+            </>
+          ) : (
+            t.submit
+          )}
         </button>
       </div>
     </form>
