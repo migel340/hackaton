@@ -26,7 +26,12 @@ interface ViewState {
   scale: number;
 }
 
-const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: RadarChartProps) => {
+const RadarChart = ({
+  userSignal,
+  matches,
+  onSignalClick,
+  className = "",
+}: RadarChartProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -34,9 +39,13 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
   const [blipPositions, setBlipPositions] = useState<BlipPosition[]>([]);
   const animationRef = useRef<number>(0);
   const sweepAngleRef = useRef(0);
-  
+
   // View state for pan and zoom
-  const [view, setView] = useState<ViewState>({ offsetX: 0, offsetY: 0, scale: 1 });
+  const [view, setView] = useState<ViewState>({
+    offsetX: 0,
+    offsetY: 0,
+    scale: 1,
+  });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
@@ -82,26 +91,32 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
   }, [matches]);
 
   // Convert world coordinates to screen coordinates
-  const worldToScreen = useCallback((worldX: number, worldY: number) => {
-    const { width, height } = dimensions;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    return {
-      x: centerX + (worldX + view.offsetX) * view.scale,
-      y: centerY + (worldY + view.offsetY) * view.scale,
-    };
-  }, [dimensions, view]);
+  const worldToScreen = useCallback(
+    (worldX: number, worldY: number) => {
+      const { width, height } = dimensions;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      return {
+        x: centerX + (worldX + view.offsetX) * view.scale,
+        y: centerY + (worldY + view.offsetY) * view.scale,
+      };
+    },
+    [dimensions, view]
+  );
 
   // Convert screen coordinates to world coordinates
-  const screenToWorld = useCallback((screenX: number, screenY: number) => {
-    const { width, height } = dimensions;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    return {
-      x: (screenX - centerX) / view.scale - view.offsetX,
-      y: (screenY - centerY) / view.scale - view.offsetY,
-    };
-  }, [dimensions, view]);
+  const screenToWorld = useCallback(
+    (screenX: number, screenY: number) => {
+      const { width, height } = dimensions;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      return {
+        x: (screenX - centerX) / view.scale - view.offsetX,
+        y: (screenY - centerY) / view.scale - view.offsetY,
+      };
+    },
+    [dimensions, view]
+  );
 
   // Draw radar
   const drawRadar = useCallback(() => {
@@ -121,10 +136,10 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     // Draw grid pattern (infinite grid effect)
     const gridSize = 50 * view.scale;
     const { x: originX, y: originY } = worldToScreen(0, 0);
-    
+
     ctx.strokeStyle = "rgba(100, 116, 139, 0.1)";
     ctx.lineWidth = 1;
-    
+
     // Vertical lines
     const startGridX = Math.floor(-originX / gridSize) * gridSize;
     for (let x = startGridX; x < width - originX; x += gridSize) {
@@ -133,7 +148,7 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
       ctx.lineTo(originX + x, height);
       ctx.stroke();
     }
-    
+
     // Horizontal lines
     const startGridY = Math.floor(-originY / gridSize) * gridSize;
     for (let y = startGridY; y < height - originY; y += gridSize) {
@@ -148,7 +163,7 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     for (let i = 1; i <= ringCount; i++) {
       const radius = (i / ringCount) * baseRadius * view.scale;
       const { x: cx, y: cy } = worldToScreen(0, 0);
-      
+
       ctx.beginPath();
       ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
       ctx.strokeStyle = `rgba(59, 130, 246, ${0.2 + (ringCount - i) * 0.05})`;
@@ -167,7 +182,7 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     // Draw cross lines
     const { x: cx, y: cy } = worldToScreen(0, 0);
     const maxDrawRadius = baseRadius * view.scale;
-    
+
     ctx.strokeStyle = "rgba(59, 130, 246, 0.15)";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -191,14 +206,20 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
     const sweepEndX = cx + maxDrawRadius * Math.cos(sweepAngleRef.current);
     const sweepEndY = cy + maxDrawRadius * Math.sin(sweepAngleRef.current);
-    
+
     const gradient = ctx.createLinearGradient(cx, cy, sweepEndX, sweepEndY);
     gradient.addColorStop(0, "rgba(59, 130, 246, 0.4)");
     gradient.addColorStop(1, "rgba(59, 130, 246, 0)");
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, maxDrawRadius, sweepAngleRef.current - 0.3, sweepAngleRef.current);
+    ctx.arc(
+      cx,
+      cy,
+      maxDrawRadius,
+      sweepAngleRef.current - 0.3,
+      sweepAngleRef.current
+    );
     ctx.closePath();
     ctx.fillStyle = gradient;
     ctx.fill();
@@ -206,10 +227,10 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     // Draw blips (matched signals)
     blipPositions.forEach(({ signal, x: worldX, y: worldY }) => {
       const { x, y } = worldToScreen(worldX, worldY);
-      
+
       // Skip if outside visible area (with some margin)
       if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
-      
+
       const isHovered = hoveredSignal?.id === signal.id;
       const baseBlipRadius = isHovered ? 20 : 14;
       const blipRadius = baseBlipRadius * Math.min(view.scale, 1.5);
@@ -242,7 +263,11 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
         ctx.fillStyle = "#1e293b";
         ctx.font = `bold ${Math.max(10, 12 * view.scale)}px sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillText(`${Math.round(signal.match_score * 100)}%`, x, y - blipRadius - 8);
+        ctx.fillText(
+          `${Math.round(signal.match_score * 100)}%`,
+          x,
+          y - blipRadius - 8
+        );
         if (isHovered || view.scale > 1.5) {
           ctx.fillText(signal.title.substring(0, 20), x, y + blipRadius + 16);
         }
@@ -252,9 +277,16 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     // Draw user signal in center
     const userColor = signalTypeColors[userSignal.type];
     const userRadius = 22 * Math.min(view.scale, 1.5);
-    
+
     // User glow
-    const userGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, userRadius * 2);
+    const userGlow = ctx.createRadialGradient(
+      cx,
+      cy,
+      0,
+      cx,
+      cy,
+      userRadius * 2
+    );
     userGlow.addColorStop(0, userColor);
     userGlow.addColorStop(0.5, `${userColor}66`);
     userGlow.addColorStop(1, "transparent");
@@ -281,7 +313,14 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
     // Request next frame
     animationRef.current = requestAnimationFrame(drawRadar);
-  }, [dimensions, blipPositions, hoveredSignal, userSignal, view, worldToScreen]);
+  }, [
+    dimensions,
+    blipPositions,
+    hoveredSignal,
+    userSignal,
+    view,
+    worldToScreen,
+  ]);
 
   useEffect(() => {
     animationRef.current = requestAnimationFrame(drawRadar);
@@ -289,37 +328,40 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
   }, [drawRadar]);
 
   // Handle mouse wheel for zoom
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      e.preventDefault();
 
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    // Get world position before zoom
-    const worldBefore = screenToWorld(mouseX, mouseY);
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
 
-    // Calculate new scale
-    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-    const newScale = Math.max(0.2, Math.min(5, view.scale * zoomFactor));
+      // Get world position before zoom
+      const worldBefore = screenToWorld(mouseX, mouseY);
 
-    // Calculate new offset to zoom towards mouse position
-    const { width, height } = dimensions;
-    const centerX = width / 2;
-    const centerY = height / 2;
+      // Calculate new scale
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newScale = Math.max(0.2, Math.min(5, view.scale * zoomFactor));
 
-    const newOffsetX = (mouseX - centerX) / newScale - worldBefore.x;
-    const newOffsetY = (mouseY - centerY) / newScale - worldBefore.y;
+      // Calculate new offset to zoom towards mouse position
+      const { width, height } = dimensions;
+      const centerX = width / 2;
+      const centerY = height / 2;
 
-    setView({
-      scale: newScale,
-      offsetX: newOffsetX,
-      offsetY: newOffsetY,
-    });
-  }, [view.scale, screenToWorld, dimensions]);
+      const newOffsetX = (mouseX - centerX) / newScale - worldBefore.x;
+      const newOffsetY = (mouseY - centerY) / newScale - worldBefore.y;
+
+      setView({
+        scale: newScale,
+        offsetX: newOffsetX,
+        offsetY: newOffsetY,
+      });
+    },
+    [view.scale, screenToWorld, dimensions]
+  );
 
   // Attach wheel event listener
   useEffect(() => {
@@ -332,7 +374,8 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
   // Handle mouse events for pan
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (e.button === 0) { // Left click
+    if (e.button === 0) {
+      // Left click
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
     }
@@ -349,13 +392,13 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     if (isPanning) {
       const dx = (e.clientX - panStart.x) / view.scale;
       const dy = (e.clientY - panStart.y) / view.scale;
-      
-      setView(prev => ({
+
+      setView((prev) => ({
         ...prev,
         offsetX: prev.offsetX + dx,
         offsetY: prev.offsetY + dy,
       }));
-      
+
       setPanStart({ x: e.clientX, y: e.clientY });
       canvas.style.cursor = "grabbing";
       return;
@@ -378,7 +421,7 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isPanning) return;
-    
+
     const canvas = canvasRef.current;
     if (!canvas || !onSignalClick) return;
 
@@ -418,18 +461,27 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
         onClick={handleClick}
         className="absolute inset-0 cursor-grab"
       />
-      
       // {/* Controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2">
         <button
-          onClick={() => setView(prev => ({ ...prev, scale: Math.min(5, prev.scale * 1.2) }))}
+          onClick={() =>
+            setView((prev) => ({
+              ...prev,
+              scale: Math.min(5, prev.scale * 1.2),
+            }))
+          }
           className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm"
           title="Przybliż"
         >
           +
         </button>
         <button
-          onClick={() => setView(prev => ({ ...prev, scale: Math.max(0.2, prev.scale * 0.8) }))}
+          onClick={() =>
+            setView((prev) => ({
+              ...prev,
+              scale: Math.max(0.2, prev.scale * 0.8),
+            }))
+          }
           className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm"
           title="Oddal"
         >
@@ -443,12 +495,10 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
           ⟲
         </button>
       </div>
-
       {/* Zoom indicator */}
       <div className="absolute top-4 left-4 bg-base-300/80 px-3 py-1 rounded-lg backdrop-blur-sm text-sm">
         {Math.round(view.scale * 100)}%
       </div>
-
       {/* Legend & Instructions */}
       <div className="absolute bottom-4 left-4 flex flex-col gap-2">
         <div className="flex gap-4 bg-base-300/90 px-4 py-2 rounded-lg backdrop-blur-sm">

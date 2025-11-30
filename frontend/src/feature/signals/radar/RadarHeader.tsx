@@ -16,7 +16,7 @@ export const RadarHeader = ({
   onUserSignalChange,
 }: RadarHeaderProps) => {
   return (
-    <div className="relative top-4 flex items-center justify-between gap-10 z-10">
+    <div className="relative flex items-center justify-between gap-10 z-10">
       <div className="flex items-center gap-3 bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2">
         <div>
           <h1 className="font-bold text-lg">Radar Dopasowań</h1>
