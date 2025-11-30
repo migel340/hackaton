@@ -17,10 +17,11 @@ export default defineConfig({
       "@pages": "/src/pages",
     },
   },
-  server: {
+   server: {
+    port: 5174,
     proxy: {
-      "/local": {
-        target: "http://127.0.0.1:8000",
+      '/local': {
+        target: 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/local/, ""),
       },

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Signal } from "@/api/signals";
 import { getSignalType, getSignalTitle } from "@/api/signals";
 import {
@@ -5,7 +6,9 @@ import {
   skillLabels,
 } from "@/feature/signals/signalSchema";
 import { signalTypeColors } from "./signalTypeColors";
+import { ChatWindow, useChatWebSocket } from "@/feature/chat";
 import { useLanguage } from "@/i18n";
+import { formatMatchPercentage } from "@/feature/signals/radar/formatMatchPercentage";
 
 interface SignalDetailsModalProps {
   signal: Signal | null;
@@ -16,6 +19,10 @@ export const SignalDetailsModal = ({
   signal,
   onClose,
 }: SignalDetailsModalProps) => {
+  const [showChat, setShowChat] = useState(false);
+  
+  // WebSocket do wysyłania wiadomości
+  const { isConnected, sendMessage: sendMessageViaWs } = useChatWebSocket({});
   const { t } = useLanguage();
   
   if (!signal) return null;
@@ -51,7 +58,7 @@ export const SignalDetailsModal = ({
           <span className="badge badge-outline">{getTypeLabel(signalType)}</span>
           {signal.match_score !== undefined && (
             <span className="badge badge-success">
-              {Math.round(signal.match_score * 100)}% {t.signalDetails.matchPercentage}
+              {formatMatchPercentage(signal.match_score)}% {t.signalDetails.matchPercentage}
             </span>
           )}
         </div>
@@ -218,7 +225,14 @@ export const SignalDetailsModal = ({
 
         {/* Actions */}
         <div className="modal-action">
-          <button className="btn btn-primary">{t.signalDetails.contact}</button>
+          {signal.username && signal.user_id && (
+            <button 
+              className="btn btn-primary"
+              onClick={() => setShowChat(true)}
+            >
+              {t.signalDetails.contact}
+            </button>
+          )}
           <button className="btn btn-ghost" onClick={onClose}>
             {t.signalDetails.close}
           </button>
@@ -227,6 +241,17 @@ export const SignalDetailsModal = ({
       <form method="dialog" className="modal-backdrop">
         <button onClick={onClose}>close</button>
       </form>
+      
+      {/* Chat Window */}
+      {showChat && signal.username && (
+        <ChatWindow
+          userId={signal.user_id || 0}
+          username={signal.username}
+          onClose={() => setShowChat(false)}
+          onSendViaWs={isConnected ? sendMessageViaWs : undefined}
+          signalType={signalType}
+        />
+      )}
     </dialog>
   );
 };

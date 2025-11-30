@@ -26,20 +26,22 @@ export const RadarHeader = ({
   };
   
   return (
-    <div className="relative flex items-center justify-between gap-10 z-10">
-      <div className="flex items-center gap-3 bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-base-content/20 shadow-md">
-        <div>
-          <h1 className="font-bold text-lg">{t.radarTitle}</h1>
-          <p className="text-xs text-base-content/60">
-            {t.radarSubtitle}
-          </p>
-        </div>
+    <div className="flex items-center gap-4">
+      {/* Tytuł */}
+      <div className="text-center">
+        <h1 className="font-bold text-base">{t.radarTitle}</h1>
+        <p className="text-xs text-base-content/60">
+          {t.radarSubtitle}
+        </p>
       </div>
 
-      <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-base-content/20 shadow-md flex items-center gap-3">
-        <span className="text font-medium whitespace-nowrap">{t.yourActivity}</span>
+      <div className="w-px h-8 bg-base-content/20" />
+
+      {/* Aktywność */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium">{t.yourActivity}</span>
         <select
-          className="select select-sm select-bordered bg-base-100 min-w-[200px]"
+          className="select select-sm select-bordered bg-base-100 w-48"
           value={selectedUserSignalId || ""}
           onChange={(e) => onUserSignalChange(Number(e.target.value))}
         >
@@ -55,9 +57,12 @@ export const RadarHeader = ({
         </select>
       </div>
 
-      <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-base-content/20 shadow-md flex items-center gap-2">
+      <div className="w-px h-8 bg-base-content/20" />
+
+      {/* Typ */}
+      <div className="flex items-center gap-2">
         <span className="text-sm font-medium">{t.type}</span>
-        <span className={`badge ${signalTypeTextColors[signalType]}`}>
+        <span className={`badge badge-sm whitespace-nowrap ${signalTypeTextColors[signalType]}`}>
           {signalTypeLabels[signalType as keyof typeof signalTypeLabels]}
         </span>
       </div>

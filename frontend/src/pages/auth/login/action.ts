@@ -41,7 +41,7 @@ export async function action({ request }: ActionFunctionArgs) {
     if (res &&  res.access_token) {
       const url = new URL(request.url);
       const redirectParam =
-        redirectToRaw || url.searchParams.get("redirectTo") || "/dashboard";
+        redirectToRaw || url.searchParams.get("redirectTo") || "/";
 
       return { ok: true, redirectTo: redirectParam } satisfies ActionData;
     }

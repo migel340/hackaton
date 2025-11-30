@@ -8,6 +8,7 @@ from models.signal import (  # noqa: F401 - needed for SQLModel.metadata
     UserSignal,
 )
 from models.user import User  # noqa: F401 - needed for SQLModel.metadata
+from models.message import Message  # noqa: F401 - needed for SQLModel.metadata
 
 # Database URL from env via config
 DATABASE_URL = settings.DATABASE_URL

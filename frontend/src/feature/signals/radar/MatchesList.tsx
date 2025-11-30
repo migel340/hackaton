@@ -4,6 +4,7 @@ import { getSignalType, getSignalTitle } from "@/api/signals";
 import { signalTypeColors } from "./signalTypeColors";
 import { signalTypeLabels } from "@/feature/signals/signalSchema";
 import { useLanguage } from "@/i18n";
+import { formatMatchPercentage } from "@/feature/signals/radar/formatMatchPercentage";
 
 interface MatchesListProps {
   matches: Signal[];
@@ -114,7 +115,7 @@ const MatchCard = ({ signal, onFocus, onDetails }: MatchCardProps) => {
           </div>
           {signal.match_score !== undefined && (
             <div className="badge badge-success badge-sm">
-              {Math.round(signal.match_score * 100)}%
+              {formatMatchPercentage(signal.match_score)}%
             </div>
           )}
         </div>

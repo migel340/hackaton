@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { Signal } from "@/api/signals";
 import { getSignalType, getSignalTitle } from "@/api/signals";
 import { signalTypeLabels } from "@/feature/signals/signalSchema";
+import { formatMatchPercentage } from "@/feature/signals/radar/formatMatchPercentage";
 import {
   signalTypeColors,
   signalTypeColorsHover,
@@ -727,7 +728,7 @@ console.log(userSignal)
               </span>
               {hoveredSignal.match_score !== undefined && (
                 <span className="badge badge-success badge-sm ml-auto">
-                  {Math.round(hoveredSignal.match_score * 100)}%
+                  {formatMatchPercentage(hoveredSignal.match_score)}%
                 </span>
               )}
             </div>
@@ -795,44 +796,41 @@ console.log(userSignal)
       )}
 
       {/* Controls */}
-      <div className="absolute bottom-24 left-0 right-0 pr-80 xl:pr-96 flex justify-center pointer-events-none">
-        <div className="flex gap-3 pointer-events-auto">
-          <button
-            onClick={() =>
-              setTargetView((prev) => ({
-                ...prev,
-                scale: Math.min(5, prev.scale * 1.2),
-              }))
-            }
-            className="btn btn-circle btn-lg bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110 text-xl"
-            title="Przybliż"
-          >
-            +
-          </button>
-          <button
-            onClick={handleReset}
-            className="btn btn-circle btn-lg bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110 text-xl"
-            title="Resetuj widok"
-          >
-            ⟲
-          </button>
-          <button
-            onClick={() =>
-              setTargetView((prev) => ({
-                ...prev,
-                scale: Math.max(0.2, prev.scale * 0.8),
-              }))
-            }
-            className="btn btn-circle btn-lg bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110 text-xl"
-            title="Oddal"
-          >
-            −
-          </button>
+      <div className="absolute top-4 right-4 flex gap-2 z-10">
+        <button
+          onClick={() =>
+            setTargetView((prev) => ({
+              ...prev,
+              scale: Math.max(0.2, prev.scale * 0.8),
+            }))
+          }
+          className="btn btn-circle btn-md bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
+          title="Oddal"
+        >
+          −
+        </button>
+        <button
+          onClick={() =>
+            setTargetView((prev) => ({
+              ...prev,
+              scale: Math.min(5, prev.scale * 1.2),
+            }))
+          }
+          className="btn btn-circle btn-md bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
+          title="Przybliż"
+        >
+          +
+        </button>
+        <div className="flex items-center bg-base-300/80 px-3 rounded-lg backdrop-blur-sm text-base font-medium min-w-[52px] justify-center">
+          {Math.round(targetView.scale * 100)}%
         </div>
-      </div>
-      {/* Zoom indicator */}
-      <div className="absolute top-4 left-4 bg-base-300/80 px-3 py-1 rounded-lg backdrop-blur-sm text-sm transition-all duration-300">
-        {Math.round(targetView.scale * 100)}%
+        <button
+          onClick={handleReset}
+          className="btn btn-circle btn-md bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
+          title="Resetuj widok"
+        >
+          ⟲
+        </button>
       </div>
       {/* Legend & Instructions */}
       <div className="absolute bottom-4 left-4 flex flex-col gap-2">
