@@ -52,14 +52,13 @@ const RadarChart = ({
   const sweepAngleRef = useRef(0);
 
   // Animated view state - target is where we want to go, current is interpolated
-  // offsetX: -128 kompensuje ml-64 (256px / 2 = 128px) żeby graf był na środku ekranu
   const [targetView, setTargetView] = useState<ViewState>({
-    offsetX: -128,
+    offsetX: 0,
     offsetY: 0,
     scale: 1,
   });
   const currentViewRef = useRef<ViewState>({
-    offsetX: -128,
+    offsetX: 0,
     offsetY: 0,
     scale: 1,
   });

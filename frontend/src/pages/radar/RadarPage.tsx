@@ -56,7 +56,7 @@ const RadarPage = () => {
   );
 
   return (
-    <div className="fixed inset-0 ml-64 bg-base-100 overflow-hidden">
+    <div className="fixed inset-0 lg:left-64 bg-base-100 overflow-hidden">
       {/* 1. WARSTWA RADARU (ZMODYFIKOWANA) */}
       {/* - absolute inset-0: Kontener zajmuje cały ekran.
           - p-8: Dodajemy padding (margines wewnętrzny) ok. 32px z każdej strony.

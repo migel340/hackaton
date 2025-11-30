@@ -192,11 +192,23 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
             <label className="label">
               <span className="label-text">Stawka godzinowa (PLN) - opcjonalnie</span>
             </label>
-            <input
-              type="number"
-              {...register("hourly_rate" as keyof SignalFormData)}
-              className="input input-bordered w-full"
-              placeholder="150"
+            <Controller
+              name={"hourly_rate" as keyof SignalFormData}
+              control={control}
+              render={({ field }) => (
+                <input
+                  type="number"
+                  className="input input-bordered w-full"
+                  placeholder="150"
+                  min="0"
+                  value={field.value ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(val === "" ? undefined : Number(val));
+                  }}
+                  onWheel={(e) => e.currentTarget.blur()}
+                />
+              )}
             />
           </div>
 

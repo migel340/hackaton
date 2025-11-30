@@ -53,55 +53,57 @@ const AddSignalPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Utwórz nowy sygnał</h1>
-        <p className="text-base-content/70">
-          Wybierz rodzaj sygnału i wypełnij formularz, aby dodać swój sygnał na radar.
-        </p>
-      </div>
-
-      {actionData && !actionData.ok && actionData.message && (
-        <div className="alert alert-error mb-6">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>{actionData.message}</span>
+    <div className="flex justify-center px-4 py-8">
+      <div className="w-full max-w-3xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Utwórz nowy sygnał</h1>
+          <p className="text-base-content/70">
+            Wybierz rodzaj sygnału i wypełnij formularz, aby dodać swój sygnał na radar.
+          </p>
         </div>
-      )}
 
-      {actionData?.ok && (
-        <div className="alert alert-success mb-6">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>Sygnał został pomyślnie utworzony! Przekierowuję...</span>
-        </div>
-      )}
+        {actionData && !actionData.ok && actionData.message && (
+          <div className="alert alert-error mb-6">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>{actionData.message}</span>
+          </div>
+        )}
 
-      <div className="card bg-base-200 shadow-xl">
-        <div className="card-body">
-          <SignalForm onSubmit={handleSubmit} isLoading={isLoading} />
+        {actionData?.ok && (
+          <div className="alert alert-success mb-6">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>Sygnał został pomyślnie utworzony! Przekierowuję...</span>
+          </div>
+        )}
+
+        <div className="card bg-base-200 shadow-xl">
+          <div className="card-body">
+            <SignalForm onSubmit={handleSubmit} isLoading={isLoading} />
+          </div>
         </div>
       </div>
     </div>
