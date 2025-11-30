@@ -1,5 +1,5 @@
 # routers/signals.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
 from sqlmodel import Session, col, select
 
 from models.signal import UserSignal
@@ -17,12 +17,17 @@ from services.openai import (
     calculate_bulk_signal_matches,
     get_matching_category_ids,
 )
+from services.ws import manager
+from services.auth import decode_access_token
+from services.db import engine
+from sqlmodel import Session as SQLSession
+import asyncio
 
 router = APIRouter(prefix="/signals", tags=["Signals"])
 
 
 @router.post("/", response_model=UserSignalResponse, status_code=status.HTTP_201_CREATED)
-def add_signal(
+async def add_signal(
     signal_data: UserSignalCreate,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
@@ -62,8 +67,59 @@ def add_signal(
     session.add(new_signal)
     session.commit()
     session.refresh(new_signal)
-    
+    # Notify websocket clients (fire-and-forget)
+    try:
+        payload = {
+            "type": "new_signal",
+            "signal": {
+                "id": new_signal.id,
+                "user_id": new_signal.user_id,
+                "signal_category_id": new_signal.signal_category_id,
+                "details": new_signal.details,
+                "created_at": new_signal.created_at.isoformat() if new_signal.created_at else None,
+            },
+        }
+        asyncio.create_task(manager.broadcast(payload))
+    except Exception:
+        # don't break response if websocket broadcast fails
+        pass
+
     return new_signal
+
+
+
+@router.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time signals.
+
+    Clients should connect to `/api/v1/signals/ws?token=<JWT>` and will receive
+    JSON messages like {type: 'new_signal', signal: {...}}
+    """
+    # Validate token from query parameters
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.close(code=4001)
+        return
+
+    payload = decode_access_token(token)
+    if payload is None:
+        await websocket.close(code=4002)
+        return
+
+    # Optionally verify user exists
+    try:
+        await manager.connect(websocket)
+        while True:
+            # keep connection open; we don't expect client messages
+            try:
+                await websocket.receive_text()
+            except WebSocketDisconnect:
+                break
+            except Exception:
+                # ignore unexpected messages
+                await asyncio.sleep(0.1)
+    finally:
+        manager.disconnect(websocket)
 
 
 @router.get("/me", response_model=UserSignalsResponse)
