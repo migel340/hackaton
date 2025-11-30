@@ -82,6 +82,7 @@ const RadarChart = ({
   const [hoveredSignal, setHoveredSignal] = useState<Signal | null>(null);
   const [hoveredSignalPosition, setHoveredSignalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isHoveringUserBlip, setIsHoveringUserBlip] = useState(false);
+  const [isFocusLocked, setIsFocusLocked] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [blipPositions, setBlipPositions] = useState<BlipPosition[]>([]);
   const animationRef = useRef<number>(0);
@@ -191,8 +192,9 @@ console.log(userSignal)
         scale: 1.8, // Zoom in when focusing
       });
       
-      // Set the hovered signal to show tooltip
+      // Set the hovered signal to show tooltip and lock it
       setHoveredSignal(focusedPosition.signal);
+      setIsFocusLocked(true);
       
       // Calculate screen position for tooltip (after animation, it will be centered)
       // We set position to center of screen since the signal will be centered there
@@ -396,9 +398,9 @@ console.log(userSignal)
       ctx.fillStyle = color;
       ctx.fill();
 
-      // Border (animates thickness)
-      ctx.strokeStyle = newHoverState > 0.5 ? colors.blipBorder : colors.blipBorderFaded;
-      ctx.lineWidth = lerp(1, 2, newHoverState);
+      // // Border (animates thickness)
+      // ctx.strokeStyle = newHoverState > 0.5 ? colors.blipBorder : colors.blipBorderFaded;
+      // ctx.lineWidth = lerp(1, 2, newHoverState);
       ctx.stroke();
     });
 
@@ -429,8 +431,6 @@ console.log(userSignal)
     ctx.arc(cx, cy, userRadius, 0, 2 * Math.PI);
     ctx.fillStyle = userColor;
     ctx.fill();
-    ctx.strokeStyle = colors.blipBorder;
-    ctx.lineWidth = 3;
     ctx.stroke();
 
 
@@ -505,6 +505,8 @@ console.log(userSignal)
       // Left click
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
+      // Unlock focus when starting to pan
+      setIsFocusLocked(false);
     }
   };
 
@@ -558,13 +560,20 @@ console.log(userSignal)
       return distance < 20 * Math.min(view.scale, 1.5);
     });
 
-    setHoveredSignal(hoveredBlip?.signal || null);
+    // If we have a locked focus, only update if hovering a different blip
     if (hoveredBlip) {
+      // Hovering a blip - update to this one and unlock focus
+      setHoveredSignal(hoveredBlip.signal);
+      setIsFocusLocked(false);
       const { x, y } = worldToScreen(hoveredBlip.x, hoveredBlip.y, view);
       setHoveredSignalPosition({ x, y });
-    } else {
+    } else if (!isFocusLocked) {
+      // Not hovering any blip and no focus lock - clear tooltip
+      setHoveredSignal(null);
       setHoveredSignalPosition(null);
     }
+    // If isFocusLocked and not hovering any blip - keep the current tooltip
+    
     canvas.style.cursor = (hoveredBlip || isOverUserBlip) ? "pointer" : "grab";
   };
 
@@ -599,6 +608,11 @@ console.log(userSignal)
 
     if (clickedBlip) {
       onSignalClick(clickedBlip.signal);
+    } else {
+      // Clicked on empty space - unlock focus and clear tooltip
+      setIsFocusLocked(false);
+      setHoveredSignal(null);
+      setHoveredSignalPosition(null);
     }
   };
 

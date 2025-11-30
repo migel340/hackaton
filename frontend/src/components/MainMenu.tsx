@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/i18n";
+import logoSvg from "@/logo.svg";
 
 const MainMenu = () => {
   const location = useLocation();
@@ -26,6 +27,23 @@ const MainMenu = () => {
 
   return (
     <div className="flex flex-col bg-base-200 w-64 min-h-screen">
+      {/* Logo */}
+      <div className="border-b border-base-300 flex items-center">
+        <Link to="/" className="flex items-center group">
+          <img 
+            src={logoSvg} 
+            alt="Echo logo" 
+            className="w-21 h-21 group-hover:scale-105 transition-transform"
+          />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              echo
+            </h1>
+            <p className="text-xs text-base-content/50 -mt-1">find your match</p>
+          </div>
+        </Link>
+      </div>
+
       <ul className="menu p-4 flex-1">
         <li className="menu-title">
           <span>{t.navigation}</span>
