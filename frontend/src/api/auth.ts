@@ -24,10 +24,16 @@ export async function login(
   email: string,
   password: string
 ): Promise<LoginResult> {
-  return api.post<LoginResult>("/auth/login", {
+  const result = await api.post<LoginResult>("/auth/login", {
     email,
     password,
   });
+
+  if (result.access_token) {
+    localStorage.setItem("auth_token", result.access_token);
+  }
+
+  return result;
 }
 
 export async function logout(): Promise<{ ok: boolean }> {

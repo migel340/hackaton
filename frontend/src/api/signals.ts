@@ -346,7 +346,7 @@ export async function createSignal(
   };
 
   console.log("createSignal - calling api.post with payload:", payload);
-  const result = await api.post<CreateSignalResponse>("/signals", payload);
+  const result = await api.post<CreateSignalResponse>("/signals/", payload);
   console.log("createSignal - result:", result);
   return result;
 }

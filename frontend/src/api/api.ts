@@ -25,6 +25,22 @@ const axiosInstance: AxiosInstance = axios.create({
   },
 });
 
+// ---------- Request Interceptor (dodaje token z sessionStorage) ----------
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("auth_token");
+    console.log("Interceptor running, token:", token);
+    console.log("Config before:", JSON.stringify(config.headers));
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    console.log("Config after:", JSON.stringify(config.headers));
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // ---------- Response Interceptor (konwertuje błędy na ApiError) ----------
 axiosInstance.interceptors.response.use(
   (response) => response,
