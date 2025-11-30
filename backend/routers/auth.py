@@ -121,12 +121,14 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/logout")
-def logout():
+def logout(current_user: User = Depends(get_current_user)):
     """
     Wylogowanie użytkownika.
     
     W przypadku JWT, wylogowanie odbywa się po stronie klienta
-    poprzez usunięcie tokenu. Ten endpoint jest opcjonalny.
+    poprzez usunięcie tokenu. Ten endpoint potwierdza że token był ważny.
+    
+    Frontend powinien usunąć token z localStorage/cookies po tym requestcie.
     """
-    return {"message": "Successfully logged out"}
+    return {"message": "Successfully logged out", "user_id": current_user.id}
 
