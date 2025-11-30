@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import RadarChart from "@/components/RadarChart";
 import type { Signal } from "@/api/signals";
 import { getSignalType } from "@/api/signals";
@@ -27,6 +27,25 @@ const RadarPage = () => {
 
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
   const [filterType, setFilterType] = useState<string | null>(null);
+
+  // Konwertuj matches z MatchApiResponse na tablicę Signal[]
+  const matchesAsSignals: Signal[] = useMemo(() => {
+    if (!data?.matches?.matches) return [];
+    console.log("Raw matches from API:", data.matches.matches);
+    return data.matches.matches.map((match) => ({
+      id: match.signal_id,
+      user_id: 0,
+      signal_category_id: match.signal_category_id ?? 1,
+      details: match.details ?? {},
+      created_at: new Date().toISOString(),
+      is_active: true,
+      // API zwraca accurate jako 0-100, frontend oczekuje 0-1
+      match_score: match.accurate / 100,
+      username: match.username,
+    }));
+  }, [data?.matches?.matches]);
+
+  console.log("matchesAsSignals count:", matchesAsSignals.length, matchesAsSignals);
 
   if (loading) return <RadarLoadingState />;
   if (error || !data)

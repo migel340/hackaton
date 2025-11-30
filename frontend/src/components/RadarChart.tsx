@@ -278,8 +278,9 @@ const RadarChart = ({
       const blipRadius = baseBlipRadius * Math.min(view.scale, 1.5);
 
       // Interpolate color based on hover state
-      const baseColor = signalTypeColors[signal.type];
-      const hoverColor = signalTypeColorsHover[signal.type];
+      const signalType = getSignalType(signal);
+      const baseColor = signalTypeColors[signalType];
+      const hoverColor = signalTypeColorsHover[signalType];
       const color = newHoverState > 0.5 ? hoverColor : baseColor;
 
       // Glow effect (increases with hover)
@@ -318,12 +319,13 @@ const RadarChart = ({
         ctx.font = `bold ${Math.max(10, 12 * view.scale)}px sans-serif`;
         ctx.textAlign = "center";
         ctx.fillText(
-          `${Math.round(signal.match_score * 100)}%`,
+          `${Math.round((signal.match_score ?? 0) * 100)}%`,
           x,
           y - blipRadius - 8
         );
         if (newHoverState > 0.5 || view.scale > 1.5) {
-          ctx.fillText(signal.title.substring(0, 20), x, y + blipRadius + 16);
+          const title = signal.details?.title ?? "Sygnał";
+          ctx.fillText(title.substring(0, 20), x, y + blipRadius + 16);
         }
         ctx.globalAlpha = 1;
       }

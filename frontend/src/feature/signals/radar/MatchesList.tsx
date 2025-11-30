@@ -11,7 +11,7 @@ interface MatchesListProps {
 export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const sortedMatches = [...matches].sort(
-    (a, b) => b.match_score - a.match_score
+    (a, b) => (b.match_score ?? 0) - (a.match_score ?? 0)
   );
 
   return (
@@ -82,24 +82,18 @@ const MatchCard = ({ signal, onClick }: MatchCardProps) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
-              className="w-3 h-3 rounded-full flex-shrink-0"
+              className="w-3 h-3 rounded-full shrink-0"
               style={{ backgroundColor: signalTypeColors[signalType] }}
             />
             <span className="font-semibold text-sm truncate max-w-[140px]">
               {title}
             </span>
           </div>
-<<<<<<< HEAD
           {signal.match_score !== undefined && (
             <div className="badge badge-success badge-sm">
               {Math.round(signal.match_score * 100)}%
             </div>
           )}
-=======
-          <div className="badge badge-success badge-sm bg-opacity-20 text-success-content border-0">
-            {Math.round(signal.match_score * 100)}%
-          </div>
->>>>>>> origin/repair-radar
         </div>
         {signal.username && (
           <p className="text-xs text-base-content/60 mt-1 pl-5">
