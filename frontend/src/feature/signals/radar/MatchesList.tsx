@@ -11,7 +11,6 @@ interface MatchesListProps {
 
 export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
   // Automatycznie otwieramy panel jeśli są dopasowania
-  const [isOpen, setIsOpen] = useState(matches.length > 0);
 
   // Aktualizuj stan otwarcia gdy zmieni się liczba dopasowań
   useEffect(() => {
@@ -19,7 +18,7 @@ export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
   }, [matches.length]);
 
   const { t } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(matches.length > 0);
   const sortedMatches = [...matches].sort(
     (a, b) => (b.match_score ?? 0) - (a.match_score ?? 0)
   );
