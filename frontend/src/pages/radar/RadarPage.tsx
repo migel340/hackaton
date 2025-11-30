@@ -71,7 +71,7 @@ const RadarPage = () => {
         </div>
       </div>
 
-      <div className="absolute top-0 left-0 w-full flex justify-center z-20 pointer-events-none pt-6">
+      <div className="absolute top-0 left-0 right-0 pr-80 xl:pr-96 flex justify-center z-20 pointer-events-none pt-6">
         <div className="w-auto max-w-[90%] pointer-events-auto">
           <div className="bg-base-100/80 backdrop-blur-md shadow-xl rounded-2xl border border-base-content/10 px-6 py-4 flex items-center justify-center transition-all hover:bg-base-100/95 hover:shadow-2xl">
             <RadarHeader
@@ -85,7 +85,7 @@ const RadarPage = () => {
       </div>
 
       {/* 3. FILTRY (Bez zmian) */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+      <div className="absolute bottom-4 left-0 right-0 pr-80 xl:pr-96 flex justify-center z-10">
         <RadarFilterButtons
           matches={matchesAsSignals}
           filterType={filterType}

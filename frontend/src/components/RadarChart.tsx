@@ -112,12 +112,12 @@ console.log(userSignal)
 
   // Animated view state - target is where we want to go, current is interpolated
   const [targetView, setTargetView] = useState<ViewState>({
-    offsetX: 0,
+    offsetX: -160,
     offsetY: 0,
     scale: 1,
   });
   const currentViewRef = useRef<ViewState>({
-    offsetX: 0,
+    offsetX: -160,
     offsetY: 0,
     scale: 1,
   });
@@ -620,7 +620,7 @@ console.log(userSignal)
 
   // Reset view with smooth animation
   const handleReset = () => {
-    setTargetView({ offsetX: -128, offsetY: 0, scale: 1 });
+    setTargetView({ offsetX: -160, offsetY: 0, scale: 1 });
   };
 
   return (
@@ -795,8 +795,8 @@ console.log(userSignal)
       )}
 
       {/* Controls */}
-      <div className="absolute bottom-24 inset-x-0 flex justify-center">
-        <div className="flex gap-3">
+      <div className="absolute bottom-24 left-0 right-0 pr-80 xl:pr-96 flex justify-center pointer-events-none">
+        <div className="flex gap-3 pointer-events-auto">
           <button
             onClick={() =>
               setTargetView((prev) => ({
