@@ -19,9 +19,9 @@ const MainMenu = () => {
   }, [isDark]);
 
   const menuItems = [
-    { path: "/", label: t.radar, icon: "🎯" },
-    { path: "/signals/add", label: t.addSignal, icon: "➕" },
-    { path: "/profile", label: t.profile, icon: "👤" },
+    { path: "/", label: "Radar", icon: "📡" },
+    { path: "/signals/add", label: "Dodaj sygnał", icon: "➕" },
+    { path: "/profile", label: "Profil", icon: "👤" },
   ];
 
   return (
@@ -44,7 +44,7 @@ const MainMenu = () => {
           </li>
         ))}
       </ul>
-      
+
       <div className="p-4 border-t border-base-300 space-y-2">
         {/* Language Toggle */}
         <button
@@ -54,7 +54,7 @@ const MainMenu = () => {
           <span className="text-xl">{language === "pl" ? "🇬🇧" : "🇵🇱"}</span>
           {language === "pl" ? "English" : "Polski"}
         </button>
-        
+
         {/* Theme Toggle */}
         <button
           onClick={() => setIsDark(!isDark)}

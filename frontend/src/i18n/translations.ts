@@ -10,7 +10,7 @@ export const translations = {
     darkMode: "Tryb ciemny",
     lightMode: "Tryb jasny",
     language: "Język",
-    
+
     // Radar Page
     radarTitle: "Radar Dopasowań",
     radarSubtitle: "Kliknij sygnał, aby zobaczyć szczegóły",
@@ -21,15 +21,16 @@ export const translations = {
     openMatchList: "Otwórz listę dopasowań",
     all: "Wszystkie",
     matchScore: "Dopasowanie",
-    
+
     // Signal Types
     investor: "Inwestor",
     freelancer: "Freelancer",
     idea: "Pomysł / Startup",
-    
+
     // Signal Form
     createNewSignal: "Utwórz nowy sygnał",
-    signalFormDescription: "Wypełnij formularz, aby dodać nowy sygnał do radaru.",
+    signalFormDescription:
+      "Wypełnij formularz, aby dodać nowy sygnał do radaru.",
     signalType: "Rodzaj sygnału",
     title: "Tytuł",
     titlePlaceholder: {
@@ -60,7 +61,8 @@ export const translations = {
     hourlyRate: "Stawka godzinowa (PLN)",
     submit: "Zapisz sygnał",
     submitting: "Zapisywanie...",
-    
+    redirecting: "Przekierowuję...",
+
     // Profile
     profileTitle: "Profil użytkownika",
     profileDescription: "Edytuj swoje dane profilowe i informacje kontaktowe.",
@@ -85,13 +87,13 @@ export const translations = {
     accountInfo: "Informacje o koncie",
     createdAt: "Data utworzenia",
     lastUpdated: "Ostatnia aktualizacja",
-    
+
     // Errors & Messages
     loading: "Ładowanie...",
     error: "Błąd",
     retry: "Spróbuj ponownie",
     noData: "Brak danych",
-    
+
     // Signal Details Modal
     signalDetails: {
       matchPercentage: "dopasowania",
@@ -140,7 +142,7 @@ export const translations = {
     darkMode: "Dark mode",
     lightMode: "Light mode",
     language: "Language",
-    
+
     // Radar Page
     radarTitle: "Matching Radar",
     radarSubtitle: "Click on a signal to see details",
@@ -151,15 +153,16 @@ export const translations = {
     openMatchList: "Open matches list",
     all: "All",
     matchScore: "Match",
-    
+
     // Signal Types
     investor: "Investor",
     freelancer: "Freelancer",
     idea: "Idea / Startup",
-    
+
     // Signal Form
     createNewSignal: "Create new signal",
-    signalFormDescription: "Fill out the form to add a new signal to the radar.",
+    signalFormDescription:
+      "Fill out the form to add a new signal to the radar.",
     signalType: "Signal type",
     title: "Title",
     titlePlaceholder: {
@@ -190,7 +193,8 @@ export const translations = {
     hourlyRate: "Hourly rate (PLN)",
     submit: "Save signal",
     submitting: "Saving...",
-    
+    redirecting: "Redirecting...",
+
     // Profile
     profileTitle: "User Profile",
     profileDescription: "Edit your profile data and contact information.",
@@ -215,13 +219,13 @@ export const translations = {
     accountInfo: "Account Information",
     createdAt: "Created at",
     lastUpdated: "Last updated",
-    
+
     // Errors & Messages
     loading: "Loading...",
     error: "Error",
     retry: "Try again",
     noData: "No data",
-    
+
     // Signal Details Modal
     signalDetails: {
       matchPercentage: "match",
@@ -252,7 +256,8 @@ export const translations = {
     validation: {
       titleMin: "Title must have at least 3 characters",
       descriptionMin: "Description must have at least 10 characters",
-      descriptionStartupMin: "Startup description must have at least 20 characters",
+      descriptionStartupMin:
+        "Startup description must have at least 20 characters",
       budgetMin: "Minimum amount must be greater than 0",
       budgetMax: "Maximum amount must be greater than 0",
       budgetRange: "Maximum amount must be greater than or equal to minimum",
@@ -268,4 +273,4 @@ type DeepStringify<T> = {
   [K in keyof T]: T[K] extends object ? DeepStringify<T[K]> : string;
 };
 
-export type TranslationKeys = DeepStringify<typeof translations["pl"]>;
+export type TranslationKeys = DeepStringify<(typeof translations)["pl"]>;
