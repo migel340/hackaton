@@ -8,15 +8,6 @@ from config import settings
 client = OpenAI(api_key=settings.OPENAI_KEY)
 
 
-def get_embedding(text):
-    # Model 'text-embedding-3-small' jest najlepszy cena/jakość na hackathon
-    response = client.embeddings.create(
-        input=text,
-        model="gpt-4o-mini"
-    )
-    return response.data[0].embedding
-
-
 # Mapowanie jakie sygnały do siebie pasują
 # FREELANCER (1) szuka STARTUP_IDEA (2)
 # STARTUP_IDEA (2) szuka FREELANCER (1) i INVESTOR (3)
@@ -63,16 +54,16 @@ Oceń na podstawie:
 - Potencjału współpracy
 
 Odpowiedz TYLKO w formacie JSON:
-{{"signal_id": {target_signal_id}, "accurate": <liczba 0-100>}}"""
+{{"signal_id": {target_signal_id}, "accurate": <liczba 0-100>, "details": <PRZEPISZ DOKŁADNIE details sygnału docelowego>}}"""
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "Odpowiadasz tylko w formacie JSON. Nie dodawaj żadnego tekstu przed ani po JSON."},
+            {"role": "system", "content": "Odpowiadasz tylko w formacie JSON. Nie dodawaj żadnego tekstu przed ani po JSON. W polu 'details' przepisz dokładnie dane sygnału docelowego."},
             {"role": "user", "content": prompt}
         ],
         temperature=0.3,
-        max_tokens=100
+        max_tokens=500
     )
     
     content = response.choices[0].message.content
@@ -80,7 +71,7 @@ Odpowiedz TYLKO w formacie JSON:
         return {
             "signal_id": target_signal_id,
             "accurate": 0.0,
-            "details": None
+            "details": target_details  # fallback - oryginalne details
         }
     result_text = content.strip()
     
@@ -95,13 +86,13 @@ Odpowiedz TYLKO w formacie JSON:
         return {
             "signal_id": result.get("signal_id", target_signal_id),
             "accurate": float(result.get("accurate", 0)),
-            "details": result.get("details", None)
+            "details": result.get("details", target_details)  # fallback na oryginał
         }
     except (json.JSONDecodeError, ValueError):
         return {
             "signal_id": target_signal_id,
             "accurate": 0.0,
-            "details": None
+            "details": target_details  # fallback - oryginalne details
         }
 
 
@@ -126,6 +117,8 @@ def calculate_bulk_signal_matches(
     ])
     
     signal_ids = [sig['id'] for sig in target_signals]
+    # Mapa id -> details do fallbacku
+    details_map = {sig['id']: sig['details'] for sig in target_signals}
     
     prompt = f"""Jesteś ekspertem od matchowania ludzi w ekosystemie startupowym.
 
@@ -143,23 +136,23 @@ Oceń każdy sygnał na podstawie:
 - Potencjału współpracy
 
 Odpowiedz TYLKO w formacie JSON (tablica):
-[{{"signal_id": <id>, "accurate": <liczba 0-100>}}, ...]
+[{{"signal_id": <id>, "accurate": <liczba 0-100>, "details": <PRZEPISZ DOKŁADNIE details tego sygnału>}}, ...]
 
 Zwróć wyniki dla wszystkich sygnałów: {signal_ids}"""
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "Odpowiadasz tylko w formacie JSON. Nie dodawaj żadnego tekstu przed ani po JSON."},
+            {"role": "system", "content": "Odpowiadasz tylko w formacie JSON. Nie dodawaj żadnego tekstu przed ani po JSON. W polu 'details' każdego wyniku przepisz dokładnie dane tego sygnału docelowego."},
             {"role": "user", "content": prompt}
         ],
         temperature=0.3,
-        max_tokens=500
+        max_tokens=2000
     )
     
     content = response.choices[0].message.content
     if content is None:
-        return [{"signal_id": sig_id, "accurate": 0.0, "details": None} for sig_id in signal_ids]
+        return [{"signal_id": sig_id, "accurate": 0.0, "details": details_map.get(sig_id)} for sig_id in signal_ids]
     result_text = content.strip()
     
     try:
@@ -178,17 +171,16 @@ Zwróć wyniki dla wszystkich sygnałów: {signal_ids}"""
             {
                 "signal_id": r.get("signal_id"),
                 "accurate": float(r.get("accurate", 0)),
-                "details": r.get("details", None)
+                "details": r.get("details") or details_map.get(r.get("signal_id"))  # fallback na oryginał
             }
             for r in results
         ]
     except (json.JSONDecodeError, ValueError):
-        # Fallback - zwróć 0 dla wszystkich
-        return [{"signal_id": sig_id, "accurate": 0.0, "details": None} for sig_id in signal_ids]
+        # Fallback - zwróć 0 dla wszystkich z oryginalnymi details
+        return [{"signal_id": sig_id, "accurate": 0.0, "details": details_map.get(sig_id)} for sig_id in signal_ids]
 
 
 __all__ = [
-    "get_embedding",
     "calculate_signal_match",
     "calculate_bulk_signal_matches",
     "get_matching_category_ids",
