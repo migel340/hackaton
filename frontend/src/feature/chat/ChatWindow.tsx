@@ -26,6 +26,12 @@ export function ChatWindow({
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Autofocus na input po otwarciu
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   // Pobierz historię wiadomości
   useEffect(() => {
@@ -181,6 +187,7 @@ export function ChatWindow({
       <div className="p-3 border-t border-base-300">
         <div className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}

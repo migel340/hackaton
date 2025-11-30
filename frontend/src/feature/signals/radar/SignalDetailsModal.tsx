@@ -224,15 +224,14 @@ export const SignalDetailsModal = ({
 
         {/* Actions */}
         <div className="modal-action">
-          {signal.username && (
+          {signal.username && signal.user_id && (
             <button 
               className="btn btn-primary"
               onClick={() => setShowChat(true)}
             >
-              Skontaktuj się
+              {t.signalDetails.contact}
             </button>
           )}
-          <button className="btn btn-primary">{t.signalDetails.contact}</button>
           <button className="btn btn-ghost" onClick={onClose}>
             {t.signalDetails.close}
           </button>

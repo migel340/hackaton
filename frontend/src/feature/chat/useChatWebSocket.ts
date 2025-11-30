@@ -31,7 +31,7 @@ export function useChatWebSocket(options: UseChatWebSocketOptions = {}) {
     // W dev proxy nie działa dla WS, więc łączymy bezpośrednio z backendem
     const wsUrl =
       import.meta.env.DEV
-        ? `ws://localhost:8000/api/v1/chat/ws?token=${token}`
+        ? `ws://localhost:4000/api/v1/chat/ws?token=${token}`
         : `${protocol}//${host}/api/v1/chat/ws?token=${token}`;
 
     console.log("[Chat WS] Connecting to:", wsUrl.replace(token, "***"));
