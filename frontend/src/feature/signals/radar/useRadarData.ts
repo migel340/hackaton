@@ -18,7 +18,6 @@ export const useRadarData = (): UseRadarDataReturn => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Pobierz sygnały użytkownika przy pierwszym renderze
   useEffect(() => {
     const fetchUserSignals = async () => {
       try {

@@ -5,6 +5,7 @@ import { action as loginAction } from "@/pages/auth/login/action";
 import AddSignalPage from "@/pages/signals/add/AddSignalPage";
 import RadarPage from "@/pages/radar/RadarPage";
 import { addSignalAction } from "@pages/signals/add/action";
+import { RadarLoader } from "@pages/radar/loader";
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
       {
         path: "/",
         element: <RadarPage />,
+        loader: RadarLoader
       },
     ],
   },
