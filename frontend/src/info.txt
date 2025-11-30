@@ -1,0 +1,209 @@
+Dokument definiuje wymagania dla API backendowego na podstawie logiki 
+zaimplementowanej w warstwie frontendowej. System opiera się na modelu 
+JWT + HttpOnly Cookies.
+
+================================================================================
+1. ARCHITEKTURA AUTORYZACJI
+================================================================================
+
+A. ACCESS TOKEN (JWT):
+   - Przesyłany w nagłówku: "Authorization: Bearer <token>"
+   - Przechowywany przez frontend w pamięci (LocalStorage/SessionStorage).
+   - Krótki czas życia (np. 15-30 minut).
+
+B. REFRESH TOKEN:
+   - Przesyłany wyłącznie jako ciasteczko (HttpOnly, Secure).
+   - Frontend wymusza flagę "credentials: include".
+   - Służy do pobrania nowego Access Tokena po wygaśnięciu starego.
+   - Długi czas życia (np. 7 dni - 30 dni).
+
+C. MECHANIZM ODŚWIEŻANIA (Refresh Loop):
+   - Frontend posiada interceptor wyłapujący błędy HTTP 401.
+   - Po wykryciu 401, frontend uderza na endpoint "/auth/refresh".
+   - Po sukcesie, frontend ponawia oryginalne zapytanie z nowym tokenem.
+
+================================================================================
+2. KONFIGURACJA GLOBALNA
+================================================================================
+
+- Base URL:     /api (lub zgodnie z VITE_API_BASE)
+- Content-Type: application/json
+- CORS:         Musi zezwalać na "credentials: true" (obsługa ciasteczek)
+                oraz poprawne nagłówki Origin dla domeny frontendu.
+
+================================================================================
+3. SPECYFIKACJA ENDPOINTÓW
+================================================================================
+
+--------------------------------------------------------------------------------
+3.1. LOGOWANIE
+Metoda: POST
+Ścieżka: /auth/login
+Opis: Weryfikacja poświadczeń, wystawienie Access Tokena (body) 
+      i Refresh Tokena (cookie).
+--------------------------------------------------------------------------------
+
+REQUEST BODY:
+{
+  "email": "user@example.com",     // (string, wymagane)
+  "password": "password123",       // (string, wymagane, min. 6 znaków)
+  "remember": true                 // (boolean, opcjonalne)
+}
+*Logika: Jeśli "remember": true, Refresh Token powinien żyć dłużej (np. 30 dni).
+
+RESPONSE - SUKCES (200 OK):
+{
+  "ok": true,
+  "token": "eyJhbGciOiJIUz...",    // Access Token (JWT)
+  "user": {
+    "id": "uuid-v4",
+    "email": "user@example.com",
+    "name": "Jan Kowalski"
+  },
+  "message": "Zalogowano pomyślnie" // (opcjonalne)
+}
+
+RESPONSE - BŁĄD (400/401):
+{
+  "ok": false,
+  "message": "Nieprawidłowy email lub hasło."
+}
+
+--------------------------------------------------------------------------------
+3.2. ODŚWIEŻANIE TOKENU (REFRESH)
+Metoda: POST
+Ścieżka: /auth/refresh
+Opis: Wymiana ważnego ciasteczka Refresh Token na nowy Access Token.
+--------------------------------------------------------------------------------
+
+REQUEST:
+- Body: Brak / Puste
+- Cookies: Wymagane ciasteczko z Refresh Tokenem.
+
+RESPONSE - SUKCES (200 OK):
+{
+  "accessToken": "eyJhbGciOiJIUz..."
+  // LUB pole "token": "..."
+}
+
+RESPONSE - BŁĄD (401/403):
+- Zwracany, gdy Refresh Token wygasł lub jest nieprawidłowy.
+- Powoduje wylogowanie użytkownika na frontendzie.
+
+--------------------------------------------------------------------------------
+3.3. POBRANIE PROFILU (ME)
+Metoda: GET
+Ścieżka: /auth/me
+Opis: Weryfikacja tożsamości przy odświeżeniu strony.
+--------------------------------------------------------------------------------
+
+REQUEST:
+- Headers: Authorization: Bearer <Access Token>
+
+RESPONSE - SUKCES (200 OK):
+{
+  "ok": true,
+  "user": {
+    "id": "uuid-v4",
+    "email": "user@example.com",
+    "name": "Jan Kowalski"
+  }
+}
+
+--------------------------------------------------------------------------------
+3.4. WYLOGOWANIE
+Metoda: POST
+Ścieżka: /auth/logout
+Opis: Unieważnienie sesji i usunięcie ciasteczka Refresh Token.
+--------------------------------------------------------------------------------
+
+RESPONSE - SUKCES (200 OK):
+{
+  "ok": true
+}
+
+================================================================================
+4. SUGESTIA SCHEMATU BAZY DANYCH (Tabela: users)
+================================================================================
+
+Zalecane kolumny dla tabeli użytkowników:
+
+1. id
+   - Typ: UUID lub INT
+   - Uwagi: Klucz główny (PK)
+
+2. email
+   - Typ: VARCHAR(255)
+   - Uwagi: Unikalny, Indeksowany. Niezbędna walidacja formatu.
+
+3. password_hash
+   - Typ: VARCHAR
+   - Uwagi: Hash hasła (Argon2 / Bcrypt). NIGDY plaintext.
+
+4. full_name
+   - Typ: VARCHAR
+   - Uwagi: Opcjonalne (mapowane na pole "name" w JSON).
+
+5. created_at
+   - Typ: TIMESTAMP
+   - Uwagi: Data rejestracji.
+
+================================================================================
+5. FORMATOWANIE BŁĘDÓW
+================================================================================
+
+Frontend oczekuje błędów w formacie JSON, aby wyświetlić komunikaty w UI.
+
+Zalecany format odpowiedzi błędu:
+{
+  "message": "Treść błędu dla użytkownika",  // To pole jest wyświetlane w alercie
+  "error": "InternalErrorCode"               // Opcjonalne, dla deweloperów
+}
+
+================================================================================
+6. LISTA KONTROLNA (CHECKLIST) - DO WERYFIKACJI
+================================================================================
+
+[ ] Endpoint POST /auth/login działa i zwraca token w body oraz cookie.
+[ ] Endpoint POST /auth/refresh przyjmuje cookie i zwraca nowy token.
+[ ] Endpoint GET /auth/me jest zabezpieczony (wymaga Bearer Token).
+[ ] Endpoint POST /auth/logout czyści ciasteczka.
+[ ] CORS jest skonfigurowany dla domeny frontendu (credentials: true).
+[ ] Hasła w bazie są hashowane.
+
+================================================================================
+7. MAPOWANIE LOGIKI W PLIKACH FRONTENDU (Dla referencji)
+================================================================================
+
+Poniżej znajduje się opis, w których plikach frontendu zaimplementowano
+poszczególne mechanizmy. Ułatwi to debugowanie flow.
+
+A. api.ts (Core HTTP Client)
+   - Odpowiedzialność: Globalna obsługa zapytań HTTP.
+   - Kluczowe funkcje:
+     * `refreshAccessToken()`: Wywołuje POST /auth/refresh.
+     * `apiFetch()`: Dokleja nagłówek "Authorization: Bearer".
+     * Interceptor 401: Automatycznie ponawia zapytanie po odświeżeniu tokenu.
+     * Obsługa `localStorage` vs `sessionStorage` (zależnie od "remember me").
+
+B. auth.ts (Service Layer)
+   - Odpowiedzialność: Definicje konkretnych endpointów autoryzacji.
+   - Kluczowe funkcje:
+     * `login(email, password)` -> POST /auth/login
+     * `logout()` -> POST /auth/logout
+     * `me()` -> GET /auth/me
+
+C. action.ts (Form Validation & Logic)
+   - Odpowiedzialność: Walidacja danych przed wysłaniem do backendu.
+   - Kluczowe funkcje:
+     * Sprawdza format emaila (Regex).
+     * Sprawdza długość hasła (min. 6 znaków).
+     * Przetwarza checkbox "Zapamiętaj mnie" na boolean.
+     * Przekierowuje użytkownika po sukcesie (na /dashboard).
+
+D. LoginPage.tsx (UI View)
+   - Odpowiedzialność: Warstwa prezentacji.
+   - Kluczowe funkcje:
+     * Wyświetlanie błędów z backendu (`fetcher.data.message`).
+     * Wyświetlanie błędów walidacji (`fetcher.data.fieldErrors`).
+     * Stan ładowania (spinner na przycisku).

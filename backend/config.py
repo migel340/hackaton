@@ -1,24 +1,23 @@
+import os
 from pathlib import Path
-from pydantic import BaseSettings, SettingsConfigDict
+
+from dotenv import load_dotenv
+
+# Load .env file if present (from backend/.env)
+load_dotenv(Path(__file__).parent / ".env")
 
 
-class Settings(BaseSettings):
-		"""Application settings loaded from environment variables or a `.env` file.
+class Settings:
+    """Simple settings holder that reads values from environment variables."""
 
-		Usage:
-			- Put variables in a `.env` file at the project root, or export them in the environment.
-			- Access values via the `settings` instance below, e.g. `settings.DATABASE_URL`.
-		"""
-
-		APP_NAME: str = "hackaton"
-		DEBUG: bool = False
-		DATABASE_URL: str | None = None
-		SECRET_KEY: str = "change-me"
-
-		model_config = SettingsConfigDict(
-				env_file=Path(".env"),
-				env_file_encoding="utf-8",
-		)
+    APP_NAME: str = os.getenv("APP_NAME", "hackaton")
+    DEBUG: bool = os.getenv("DEBUG", "false").lower() in ("1", "true", "yes")
+    DATABASE_URL: str = os.getenv("DATABASE_URL")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me-in-production-use-strong-key")
+    OPENAI_KEY: str = os.getenv("OPENAI_KEY", "")
+    
+    # JWT Settings
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 24h default
 
 
 settings = Settings()
