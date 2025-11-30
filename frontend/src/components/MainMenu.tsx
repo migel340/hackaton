@@ -6,6 +6,7 @@ const MainMenu = () => {
   const menuItems = [
     { path: "/", label: "Radar", icon: "🎯" },
     { path: "/signals/add", label: "Dodaj sygnał", icon: "➕" },
+    { path: "/profile", label: "Profil", icon: "👤" },
   ];
 
   return (
