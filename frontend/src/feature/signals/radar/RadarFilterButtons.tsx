@@ -1,7 +1,7 @@
 import type { Signal } from "@/api/signals";
 import { getSignalType } from "@/api/signals";
-import { signalTypeLabels } from "@/feature/signals/signalSchema";
 import { signalTypeBgColors } from "./signalTypeColors";
+import { useLanguage } from "@/i18n";
 
 interface RadarFilterButtonsProps {
   matches: Signal[];
@@ -14,6 +14,14 @@ export const RadarFilterButtons = ({
   filterType,
   onFilterChange,
 }: RadarFilterButtonsProps) => {
+  const { t } = useLanguage();
+  
+  const signalTypeLabels = {
+    investor: t.investor,
+    freelancer: t.freelancer,
+    idea: t.idea,
+  };
+  
   return (
     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 bg-base-100/80 backdrop-blur-sm rounded-full px-4 py-2">
       {/* All button */}
@@ -22,7 +30,7 @@ export const RadarFilterButtons = ({
           filterType === null ? "btn-primary" : "btn-ghost"
         }`}
         onClick={() => onFilterChange(null)}
-        title="Wszystkie"
+        title={t.all}
       >
         {matches.length}
       </button>

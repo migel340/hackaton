@@ -1,16 +1,17 @@
 interface ProfileAlertProps {
   type: "success" | "error";
   message: string;
+  sticky?: boolean;
 }
 
-const ProfileAlert = ({ type, message }: ProfileAlertProps) => {
+const ProfileAlert = ({ type, message, sticky = false }: ProfileAlertProps) => {
   const isSuccess = type === "success";
 
   return (
     <div
-      className={`alert ${
-        isSuccess ? "alert-success" : "alert-error"
-      } mb-6 shadow-lg`}
+      className={`alert ${isSuccess ? "alert-success" : "alert-error"} ${
+        sticky ? "rounded-none" : "mb-6"
+      } shadow-lg`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
