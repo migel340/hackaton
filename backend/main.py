@@ -10,8 +10,12 @@ from services.db import create_db_and_tables
 
 # Zezwalamy na komunikację z frontendem
 origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "http://localhost:5173",      # Vite dev server
+    "http://127.0.0.1:5173",      # Vite dev server (IP)
+    "http://localhost:3000",      # Alternative frontend port
+    "http://127.0.0.1:3000",      # Alternative frontend port (IP)
+    "http://localhost:8080",      # Another common port
+    "http://frontend:5173",       # Docker network (jeśli frontend w kontenerze)
 ]
 
 
