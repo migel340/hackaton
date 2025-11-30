@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Signal } from "@/api/signals";
 import { getSignalType, getSignalTitle } from "@/api/signals";
 import { signalTypeColors } from "./signalTypeColors";
@@ -9,7 +9,14 @@ interface MatchesListProps {
 }
 
 export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  // Automatycznie otwieramy panel jeśli są dopasowania
+  const [isOpen, setIsOpen] = useState(matches.length > 0);
+
+  // Aktualizuj stan otwarcia gdy zmieni się liczba dopasowań
+  useEffect(() => {
+    setIsOpen(matches.length > 0);
+  }, [matches.length]);
+
   const sortedMatches = [...matches].sort(
     (a, b) => (b.match_score ?? 0) - (a.match_score ?? 0)
   );
@@ -72,7 +79,7 @@ interface MatchCardProps {
 const MatchCard = ({ signal, onClick }: MatchCardProps) => {
   const signalType = getSignalType(signal);
   const title = getSignalTitle(signal.details);
-  
+
   return (
     <div
       className="card bg-base-100 hover:bg-base-300 cursor-pointer transition-all hover:scale-[1.02] shadow-sm border border-base-200"

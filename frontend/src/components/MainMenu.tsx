@@ -17,7 +17,7 @@ const MainMenu = () => {
   }, [isDark]);
 
   const menuItems = [
-    { path: "/", label: "Radar", icon: "🎯" },
+    { path: "/", label: "Radar", icon: "📡" },
     { path: "/signals/add", label: "Dodaj sygnał", icon: "➕" },
     { path: "/profile", label: "Profil", icon: "👤" },
   ];
@@ -42,7 +42,7 @@ const MainMenu = () => {
           </li>
         ))}
       </ul>
-      
+
       <div className="p-4 border-t border-base-300">
         <button
           onClick={() => setIsDark(!isDark)}
