@@ -20,6 +20,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# Debug: wyświetl CORS origins przy starcie
+print(f"CORS Origins: {settings.CORS_ORIGINS}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -32,6 +35,15 @@ app.add_middleware(
 @app.get("/api/v1")
 def read_root():
     return {"message": "XD"}
+
+
+@app.get("/api/v1/debug/cors")
+def debug_cors():
+    """Sprawdź aktualną konfigurację CORS."""
+    return {
+        "cors_origins": settings.CORS_ORIGINS,
+        "message": "Jeśli widzisz to z frontendu, CORS działa!"
+    }
 
 
 @app.get("/api/v1/health")

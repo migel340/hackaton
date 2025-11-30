@@ -99,6 +99,20 @@ def update_current_user_profile(
     return current_user
 
 
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_current_user(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Usuń konto aktualnie zalogowanego użytkownika.
+    """
+    session.delete(current_user)
+    session.commit()
+    
+    return None
+
+
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(
     user_id: int,
@@ -117,6 +131,7 @@ def get_user(
         )
     return user
 
+<<<<<<< Updated upstream
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 def delete_current_user(
@@ -131,3 +146,5 @@ def delete_current_user(
     
     return None
 
+=======
+>>>>>>> Stashed changes
