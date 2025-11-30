@@ -21,7 +21,7 @@ export class ApiError extends Error {
 const API_BASE =
   (typeof import.meta !== "undefined" &&
     (import.meta as any)?.env?.VITE_API_BASE) ||
-  "/api";
+  "http://localhost:8000/api/v1";
 
 // ---------- Token storage ----------
 const TOKEN_KEY_LOCAL = "auth_token";
