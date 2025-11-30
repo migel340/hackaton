@@ -1,7 +1,7 @@
 # Makefile for Signal Matching Backend
 # Usage: make <command>
 
-.PHONY: help setup install run seed test-db clean docker-up docker-down reset
+.PHONY: help setup install run seed test-db clean docker-up docker-down reset docker-build docker-run docker-logs
 
 # Default target
 help:
@@ -23,6 +23,13 @@ help:
 	@echo "║  Development:                                                    ║"
 	@echo "║    make run        - Start FastAPI server (port 8000)           ║"
 	@echo "║    make clean      - Remove __pycache__ and .pyc files          ║"
+	@echo "║                                                                  ║"
+	@echo "║  Docker (Full Stack):                                           ║"
+	@echo "║    make docker-build - Build backend Docker image               ║"
+	@echo "║    make docker-run   - Run full stack (backend + postgres)      ║"
+	@echo "║    make docker-stop  - Stop full stack                          ║"
+	@echo "║    make docker-logs  - View backend logs                        ║"
+	@echo "║    make docker-seed  - Seed database in Docker                  ║"
 	@echo "║                                                                  ║"
 	@echo "║  Quick Start:                                                    ║"
 	@echo "║    make quickstart - docker-up + setup + seed + run             ║"
@@ -110,6 +117,53 @@ clean:
 
 quickstart: docker-up setup seed run
 	@echo "🎉 Quick start complete!"
+
+# ============================================================================
+# DOCKER (FULL STACK)
+# ============================================================================
+
+docker-build:
+	@echo "🐳 Building backend Docker image..."
+	docker-compose build backend
+	@echo "✅ Image built!"
+
+docker-run:
+	@echo "🐳 Starting full stack (backend + postgres)..."
+	docker-compose up -d
+	@echo "⏳ Waiting for services to start..."
+	@sleep 5
+	@echo "✅ Stack is running!"
+	@echo "📖 Swagger UI: http://localhost:8000/docs"
+	@echo "📖 ReDoc: http://localhost:8000/redoc"
+
+docker-stop:
+	@echo "🐳 Stopping full stack..."
+	docker-compose down
+	@echo "✅ Stack stopped!"
+
+docker-logs:
+	@echo "📋 Backend logs:"
+	docker-compose logs -f backend
+
+docker-seed:
+	@echo "🌱 Seeding database in Docker..."
+	docker-compose exec backend python scripts/seed_test_data.py
+	@echo "✅ Database seeded!"
+
+docker-reset:
+	@echo "🗑️  Resetting database in Docker..."
+	docker-compose exec backend python -c "\
+from services.db import engine; \
+from sqlmodel import SQLModel; \
+SQLModel.metadata.drop_all(engine); \
+print('  ✅ All tables dropped!')"
+	@echo "📦 Re-creating tables and seeding..."
+	docker-compose exec backend python scripts/seed_test_data.py
+	@echo "✅ Database reset complete!"
+
+docker-shell:
+	@echo "🐚 Opening shell in backend container..."
+	docker-compose exec backend /bin/bash
 
 # ============================================================================
 # TESTING HELPERS (curl commands)
