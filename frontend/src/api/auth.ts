@@ -1,26 +1,38 @@
 import { api } from "./api";
 
+export type User = {
+  id: string;
+  email: string;
+  name?: string;
+};
+
 export type LoginResult = {
   ok?: boolean;
   token?: string;
-  user?: {
-    id: string;
-    email: string;
-    name?: string;
-  };
+  access_token?: string;
+  user?: User;
+  message?: string;
+};
+
+export type AuthResponse = {
+  ok: boolean;
+  user?: User;
   message?: string;
 };
 
 export async function login(
   email: string,
-  password: string,
-  opts?: { remember?: boolean }
+  password: string
 ): Promise<LoginResult> {
-  const result = await api.post<LoginResult>("auth/login", {
+  const result = await api.post<LoginResult>("/auth/login", {
     email,
     password,
-    remember: !!opts?.remember,
   });
+
+  if (result.access_token) {
+    localStorage.setItem("auth_token", result.access_token);
+  }
+
   return result;
 }
 
@@ -28,35 +40,18 @@ export async function logout(): Promise<{ ok: boolean }> {
   return api.post<{ ok: boolean }>("auth/logout");
 }
 
-export async function me(): Promise<{
-  ok: boolean;
-  user?: LoginResult["user"];
-}> {
-  return api.get<{ ok: boolean; user?: LoginResult["user"] }>("auth/me");
+export async function me(): Promise<AuthResponse> {
+  return api.get<AuthResponse>("auth/me");
 }
 
-export async function registerUser(payload: {
-  name: string;
-  email: string;
-  password: string;
-}) {
-  const res = await fetch("/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+export async function register(
+  email: string,
+  password: string,
+  name?: string
+): Promise<LoginResult> {
+  return api.post<LoginResult>("auth/register", {
+    email,
+    password,
+    name,
   });
-  if (!res.ok) {
-    const msg = await safeMessage(res);
-    throw new Error(msg || "Rejestracja nie powiodła się");
-  }
-  return res.json();
-}
-
-async function safeMessage(res: Response) {
-  try {
-    const data = await res.json();
-    return data?.message;
-  } catch {
-    return null;
-  }
 }

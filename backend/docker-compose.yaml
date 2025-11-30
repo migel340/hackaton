@@ -1,15 +1,50 @@
 services:
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hackaton-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://hackaton_user:hackaton_passwd@postgres:5432/hackaton_db
+      - APP_NAME=hackaton
+      - DEBUG=true
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - OPENAI_KEY=${OPENAI_KEY}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - hackaton-network
+
+  # PostgreSQL Database
   postgres:
     image: postgres:17
+    container_name: hackaton-postgres
     environment:
-      POSTGRES_USER: hackaton_user
-      POSTGRES_PASSWORD: hackaton_passwd
-      POSTGRES_DB: hackaton_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hackaton_user -d hackaton_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - hackaton-network
 
+networks:
+  hackaton-network:
+    driver: bridge
 
 volumes:
   postgres_data:
