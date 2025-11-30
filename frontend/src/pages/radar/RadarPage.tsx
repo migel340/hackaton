@@ -33,8 +33,19 @@ const RadarPage = () => {
   if (error || !data) {
     return <RadarErrorState error={error} onRetry={refetch} />;
   }
-  console.log(data)
-  const filteredMatches = data?.matches?.matches?.filter((signal) =>
+  
+  // Konwertuj matches z API na format Signal[]
+  const matchesAsSignals: Signal[] = data.matches.matches.map((match) => ({
+    id: match.signal_id,
+    user_id: 0,
+    signal_category_id: 0, // Będzie określony przez details
+    details: match.details || { title: "Brak szczegółów" },
+    created_at: new Date().toISOString(),
+    is_active: true,
+    match_score: match.accurate / 100, // konwersja 0-100 na 0-1
+  }));
+
+  const filteredMatches = matchesAsSignals.filter((signal) =>
     filterType ? getSignalType(signal) === filterType : true
   );
 
@@ -60,7 +71,7 @@ const RadarPage = () => {
 
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
         <RadarFilterButtons
-          matches={data.matches.matches}
+          matches={matchesAsSignals}
           filterType={filterType}
           onFilterChange={setFilterType}
         />

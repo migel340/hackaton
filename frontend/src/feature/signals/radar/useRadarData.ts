@@ -39,13 +39,16 @@ export const useRadarData = (): UseRadarDataReturn => {
 
     try {
       setLoading(true);
-      const matches = await getMatchedSignals(selectedUserSignalId);
-      const selectedSignal = userSignals.find(s => s.id === selectedUserSignalId);
+      const matchResponse = await getMatchedSignals(selectedUserSignalId);
+      
+      // Użyj source_signal_id z odpowiedzi API do znalezienia sygnału źródłowego
+      const sourceSignalId = matchResponse.source_signal_id;
+      const selectedSignal = userSignals.find(s => s.id === sourceSignalId);
       
       if (selectedSignal) {
         setData({
           user_signal: selectedSignal,
-          matches: matches,
+          matches: matchResponse,
         });
       }
       setError(null);

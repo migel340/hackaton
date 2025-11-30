@@ -43,7 +43,17 @@ export const getSignalType = (signal: Signal): SignalType => {
 
 export interface MatchedSignalsResponse {
   user_signal: Signal; // Sygnał zalogowanego użytkownika (środek radaru)
-  matches: Signal[]; // Dopasowane sygnały innych użytkowników
+  matches: MatchApiResponse; // Odpowiedź z API matchowania
+}
+
+// Odpowiedź z API dla matchowania
+export interface MatchApiResponse {
+  source_signal_id: number;
+  matches: Array<{
+    signal_id: number;
+    accurate: number;
+    details: SignalDetails | null;
+  }>;
 }
 
 /**
@@ -62,9 +72,9 @@ export async function getUserSignals(): Promise<Signal[]> {
 /**
  * Pobiera dopasowane sygnały dla wybranego sygnału użytkownika
  */
-export async function getMatchedSignals(userSignalId: number): Promise<Signal[]> {
+export async function getMatchedSignals(userSignalId: number): Promise<MatchApiResponse> {
   try {
-    const response = await api.get<Signal[]>(`/signals/match/${userSignalId}`);
+    const response = await api.get<MatchApiResponse>(`/signals/match/${userSignalId}`);
     return response;
   } catch (error) {
     console.error("Error fetching matched signals:", error);
