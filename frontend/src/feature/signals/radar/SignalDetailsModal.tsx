@@ -8,6 +8,7 @@ import {
 import { signalTypeColors } from "./signalTypeColors";
 import { ChatWindow, useChatWebSocket } from "@/feature/chat";
 import { useLanguage } from "@/i18n";
+import { formatMatchPercentage } from "@/feature/signals/radar/formatMatchPercentage";
 
 interface SignalDetailsModalProps {
   signal: Signal | null;
@@ -57,7 +58,7 @@ export const SignalDetailsModal = ({
           <span className="badge badge-outline">{getTypeLabel(signalType)}</span>
           {signal.match_score !== undefined && (
             <span className="badge badge-success">
-              {Math.round(signal.match_score * 100)}% {t.signalDetails.matchPercentage}
+              {formatMatchPercentage(signal.match_score)}% {t.signalDetails.matchPercentage}
             </span>
           )}
         </div>

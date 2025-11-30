@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { Signal } from "@/api/signals";
 import { getSignalType, getSignalTitle } from "@/api/signals";
 import { signalTypeLabels } from "@/feature/signals/signalSchema";
+import { formatMatchPercentage } from "@/feature/signals/radar/formatMatchPercentage";
 import {
   signalTypeColors,
   signalTypeColorsHover,
@@ -727,7 +728,7 @@ console.log(userSignal)
               </span>
               {hoveredSignal.match_score !== undefined && (
                 <span className="badge badge-success badge-sm ml-auto">
-                  {Math.round(hoveredSignal.match_score * 100)}%
+                  {formatMatchPercentage(hoveredSignal.match_score)}%
                 </span>
               )}
             </div>

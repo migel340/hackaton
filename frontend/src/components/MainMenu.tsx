@@ -20,9 +20,9 @@ const MainMenu = () => {
   }, [isDark]);
 
   const menuItems = [
-    { path: "/", label: "Radar", icon: "📡" },
-    { path: "/signals/add", label: "Dodaj sygnał", icon: "➕" },
-    { path: "/profile", label: "Profil", icon: "👤" },
+    { path: "/", label: t.radarMenu, icon: "📡" },
+    { path: "/signals/add", label: t.addSignal, icon: "➕" },
+    { path: "/profile", label: t.profile, icon: "👤" },
   ];
 
   return (

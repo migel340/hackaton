@@ -62,8 +62,8 @@ Oceń na podstawie:
 - Komplementarności ofert
 - Potencjału współpracy
 
-Odpowiedz TYLKO w formacie JSON:
-{{"signal_id": {target_signal_id}, "accurate": <liczba 0-100>}}"""
+Odpowiedz TYLKO w formacie JSON. Pole "accurate" zwracaj jako liczbę z dokładnością co najmniej do jednego miejsca po przecinku (np. 87.3, 64.8), unikaj wartości zaokrąglonych do pełnych dziesiątek:
+{{"signal_id": {target_signal_id}, "accurate": <liczba 0-100 z miejscami po przecinku>}}"""
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -142,8 +142,8 @@ Oceń każdy sygnał na podstawie:
 - Komplementarności ofert
 - Potencjału współpracy
 
-Odpowiedz TYLKO w formacie JSON (tablica):
-[{{"signal_id": <id>, "accurate": <liczba 0-100>}}, ...]
+Odpowiedz TYLKO w formacie JSON (tablica). Każde pole "accurate" musi mieć co najmniej jedno miejsce po przecinku (np. 82.4, 71.9) i nie powinno być zaokrąglane do pełnych dziesiątek, jeśli nie jest to konieczne:
+[{{"signal_id": <id>, "accurate": <liczba 0-100 z miejscami po przecinku>}}, ...]
 
 Zwróć wyniki dla wszystkich sygnałów: {signal_ids}"""
 

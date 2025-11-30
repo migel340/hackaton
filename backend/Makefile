@@ -1,7 +1,7 @@
 # Makefile for Signal Matching Backend
 # Usage: make <command>
 
-.PHONY: help setup install run seed test-db clean docker-up docker-down reset docker-build docker-run docker-logs
+.PHONY: help setup install run seed seed-presentation test-db clean docker-up docker-down reset docker-build docker-run docker-logs docker-seed-presentation
 
 # Default target
 help:
@@ -18,6 +18,7 @@ help:
 	@echo "║    make docker-down- Stop PostgreSQL Docker                     ║"
 	@echo "║    make test-db    - Test database connection                   ║"
 	@echo "║    make seed       - Seed database with test data               ║"
+	@echo "║    make seed-presentation - Seed database with demo data        ║"
 	@echo "║    make reset      - Reset DB (drop all + re-seed)              ║"
 	@echo "║                                                                  ║"
 	@echo "║  Development:                                                    ║"
@@ -30,6 +31,7 @@ help:
 	@echo "║    make docker-stop  - Stop full stack                          ║"
 	@echo "║    make docker-logs  - View backend logs                        ║"
 	@echo "║    make docker-seed  - Seed database in Docker                  ║"
+	@echo "║    make docker-seed-presentation - Seed demo data in Docker     ║"
 	@echo "║                                                                  ║"
 	@echo "║  Quick Start:                                                    ║"
 	@echo "║    make quickstart - docker-up + setup + seed + run             ║"
@@ -81,6 +83,10 @@ test-db:
 seed:
 	@echo "🌱 Seeding database with test data..."
 	PYTHONPATH=$(PWD) $(PYTHON) scripts/seed_test_data.py
+
+seed-presentation:
+	@echo "🌱 Seeding database with presentation data..."
+	PYTHONPATH=$(PWD) $(PYTHON) scripts/seed_presentation_data.py
 
 reset:
 	@echo "🗑️  Resetting database..."
@@ -149,6 +155,11 @@ docker-seed:
 	@echo "🌱 Seeding database in Docker..."
 	docker-compose exec backend python scripts/seed_test_data.py
 	@echo "✅ Database seeded!"
+
+docker-seed-presentation:
+	@echo "🌱 Seeding demo database in Docker..."
+	docker-compose exec backend python scripts/seed_presentation_data.py
+	@echo "✅ Demo database seeded!"
 
 docker-reset:
 	@echo "🗑️  Resetting database in Docker..."

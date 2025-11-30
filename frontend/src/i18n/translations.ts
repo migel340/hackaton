@@ -4,7 +4,7 @@ export const translations = {
   pl: {
     // Navigation
     navigation: "Nawigacja",
-    radar: "Radar",
+    radarMenu: "Radar",
     addSignal: "Dodaj sygnał",
     profile: "Profil",
     darkMode: "Tryb ciemny",
@@ -142,7 +142,7 @@ export const translations = {
   en: {
     // Navigation
     navigation: "Navigation",
-    radar: "Radar",
+    radarMenu: "Radar",
     addSignal: "Add Signal",
     profile: "Profile",
     darkMode: "Dark mode",
