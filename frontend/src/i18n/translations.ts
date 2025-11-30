@@ -1,0 +1,271 @@
+export type Language = "pl" | "en";
+
+export const translations = {
+  pl: {
+    // Navigation
+    navigation: "Nawigacja",
+    radar: "Radar",
+    addSignal: "Dodaj sygnał",
+    profile: "Profil",
+    darkMode: "Tryb ciemny",
+    lightMode: "Tryb jasny",
+    language: "Język",
+    
+    // Radar Page
+    radarTitle: "Radar Dopasowań",
+    radarSubtitle: "Kliknij sygnał, aby zobaczyć szczegóły",
+    yourActivity: "Twoja aktywność:",
+    type: "Typ:",
+    matches: "Dopasowania",
+    closeList: "Zamknij listę",
+    openMatchList: "Otwórz listę dopasowań",
+    all: "Wszystkie",
+    matchScore: "Dopasowanie",
+    
+    // Signal Types
+    investor: "Inwestor",
+    freelancer: "Freelancer",
+    idea: "Pomysł / Startup",
+    
+    // Signal Form
+    createNewSignal: "Utwórz nowy sygnał",
+    signalFormDescription: "Wypełnij formularz, aby dodać nowy sygnał do radaru.",
+    signalType: "Rodzaj sygnału",
+    title: "Tytuł",
+    titlePlaceholder: {
+      investor: "np. Inwestycja w FinTech",
+      freelancer: "np. Senior React Developer",
+      idea: "np. Innowacyjna platforma EdTech",
+    },
+    description: "Opis",
+    descriptionLabel: {
+      investor: "Opis inwestycji",
+      freelancer: "Opis umiejętności",
+      idea: "Opis startupu",
+    },
+    descriptionPlaceholder: {
+      investor: "Opisz, w jakie projekty chcesz inwestować...",
+      freelancer: "Opisz swoje doświadczenie i umiejętności...",
+      idea: "Opisz swój pomysł na startup...",
+    },
+    categories: "Kategorie",
+    selectCategories: "Wybierz kategorie",
+    skills: "Umiejętności",
+    selectSkills: "Wybierz umiejętności",
+    neededSkills: "Wymagane umiejętności",
+    selectNeededSkills: "Wybierz wymagane umiejętności",
+    budget: "Budżet",
+    budgetRange: "Zakres budżetu (PLN)",
+    fundingRange: "Zakres finansowania (PLN)",
+    hourlyRate: "Stawka godzinowa (PLN)",
+    submit: "Zapisz sygnał",
+    submitting: "Zapisywanie...",
+    
+    // Profile
+    profileTitle: "Profil użytkownika",
+    profileDescription: "Edytuj swoje dane profilowe i informacje kontaktowe.",
+    basicInfo: "Podstawowe informacje",
+    username: "Nazwa użytkownika",
+    email: "Email",
+    firstName: "Imię",
+    lastName: "Nazwisko",
+    aboutMe: "O mnie",
+    aboutMePlaceholder: "Napisz kilka słów o sobie...",
+    locationAndExperience: "Lokalizacja i doświadczenie",
+    location: "Lokalizacja",
+    locationPlaceholder: "np. Warszawa, Polska",
+    experienceYears: "Lata doświadczenia",
+    socialLinks: "Linki społecznościowe",
+    website: "Strona internetowa",
+    skillsAndExpertise: "Umiejętności i ekspertyza",
+    skillsPlaceholder: "np. React, TypeScript, Node.js",
+    saveChanges: "Zapisz zmiany",
+    saving: "Zapisywanie...",
+    savedSuccessfully: "Pomyślnie zapisano zmiany!",
+    accountInfo: "Informacje o koncie",
+    createdAt: "Data utworzenia",
+    lastUpdated: "Ostatnia aktualizacja",
+    
+    // Errors & Messages
+    loading: "Ładowanie...",
+    error: "Błąd",
+    retry: "Spróbuj ponownie",
+    noData: "Brak danych",
+    
+    // Signal Details Modal
+    signalDetails: {
+      matchPercentage: "dopasowania",
+      author: "Autor",
+      description: "Opis",
+      ticketSize: "Wielkość inwestycji",
+      stage: "Etap",
+      focusAreas: "Obszary zainteresowań",
+      criteria: "Kryteria",
+      lookingFor: "Szukam",
+      valueAdd: "Co oferuję",
+      budget: "Budżet",
+      hourlyRate: "Stawka godzinowa",
+      experience: "Doświadczenie",
+      availability: "Dostępność",
+      skills: "Umiejętności",
+      problem: "Problem",
+      solution: "Rozwiązanie",
+      market: "Rynek",
+      fundingNeeded: "Szukane finansowanie",
+      requiredSkills: "Wymagane umiejętności",
+      categories: "Kategorie",
+      contact: "Skontaktuj się",
+      close: "Zamknij",
+    },
+
+    // Validation
+    validation: {
+      titleMin: "Tytuł musi mieć minimum 3 znaki",
+      descriptionMin: "Opis musi mieć minimum 10 znaków",
+      descriptionStartupMin: "Opis startupu musi mieć minimum 20 znaków",
+      budgetMin: "Minimalna kwota musi być większa od 0",
+      budgetMax: "Maksymalna kwota musi być większa od 0",
+      budgetRange: "Maksymalna kwota musi być większa lub równa minimalnej",
+      selectCategory: "Wybierz przynajmniej jedną kategorię",
+      selectSkill: "Wybierz przynajmniej jedną umiejętność",
+      hourlyRateMin: "Stawka godzinowa musi być większa od 0",
+    },
+  },
+  en: {
+    // Navigation
+    navigation: "Navigation",
+    radar: "Radar",
+    addSignal: "Add Signal",
+    profile: "Profile",
+    darkMode: "Dark mode",
+    lightMode: "Light mode",
+    language: "Language",
+    
+    // Radar Page
+    radarTitle: "Matching Radar",
+    radarSubtitle: "Click on a signal to see details",
+    yourActivity: "Your activity:",
+    type: "Type:",
+    matches: "Matches",
+    closeList: "Close list",
+    openMatchList: "Open matches list",
+    all: "All",
+    matchScore: "Match",
+    
+    // Signal Types
+    investor: "Investor",
+    freelancer: "Freelancer",
+    idea: "Idea / Startup",
+    
+    // Signal Form
+    createNewSignal: "Create new signal",
+    signalFormDescription: "Fill out the form to add a new signal to the radar.",
+    signalType: "Signal type",
+    title: "Title",
+    titlePlaceholder: {
+      investor: "e.g. Investment in FinTech",
+      freelancer: "e.g. Senior React Developer",
+      idea: "e.g. Innovative EdTech platform",
+    },
+    description: "Description",
+    descriptionLabel: {
+      investor: "Investment description",
+      freelancer: "Skills description",
+      idea: "Startup description",
+    },
+    descriptionPlaceholder: {
+      investor: "Describe what projects you want to invest in...",
+      freelancer: "Describe your experience and skills...",
+      idea: "Describe your startup idea...",
+    },
+    categories: "Categories",
+    selectCategories: "Select categories",
+    skills: "Skills",
+    selectSkills: "Select skills",
+    neededSkills: "Required skills",
+    selectNeededSkills: "Select required skills",
+    budget: "Budget",
+    budgetRange: "Budget range (PLN)",
+    fundingRange: "Funding range (PLN)",
+    hourlyRate: "Hourly rate (PLN)",
+    submit: "Save signal",
+    submitting: "Saving...",
+    
+    // Profile
+    profileTitle: "User Profile",
+    profileDescription: "Edit your profile data and contact information.",
+    basicInfo: "Basic Information",
+    username: "Username",
+    email: "Email",
+    firstName: "First name",
+    lastName: "Last name",
+    aboutMe: "About me",
+    aboutMePlaceholder: "Write a few words about yourself...",
+    locationAndExperience: "Location and Experience",
+    location: "Location",
+    locationPlaceholder: "e.g. Warsaw, Poland",
+    experienceYears: "Years of experience",
+    socialLinks: "Social Links",
+    website: "Website",
+    skillsAndExpertise: "Skills and Expertise",
+    skillsPlaceholder: "e.g. React, TypeScript, Node.js",
+    saveChanges: "Save changes",
+    saving: "Saving...",
+    savedSuccessfully: "Changes saved successfully!",
+    accountInfo: "Account Information",
+    createdAt: "Created at",
+    lastUpdated: "Last updated",
+    
+    // Errors & Messages
+    loading: "Loading...",
+    error: "Error",
+    retry: "Try again",
+    noData: "No data",
+    
+    // Signal Details Modal
+    signalDetails: {
+      matchPercentage: "match",
+      author: "Author",
+      description: "Description",
+      ticketSize: "Investment size",
+      stage: "Stage",
+      focusAreas: "Focus areas",
+      criteria: "Criteria",
+      lookingFor: "Looking for",
+      valueAdd: "What I offer",
+      budget: "Budget",
+      hourlyRate: "Hourly rate",
+      experience: "Experience",
+      availability: "Availability",
+      skills: "Skills",
+      problem: "Problem",
+      solution: "Solution",
+      market: "Market",
+      fundingNeeded: "Funding needed",
+      requiredSkills: "Required skills",
+      categories: "Categories",
+      contact: "Contact",
+      close: "Close",
+    },
+
+    // Validation
+    validation: {
+      titleMin: "Title must have at least 3 characters",
+      descriptionMin: "Description must have at least 10 characters",
+      descriptionStartupMin: "Startup description must have at least 20 characters",
+      budgetMin: "Minimum amount must be greater than 0",
+      budgetMax: "Maximum amount must be greater than 0",
+      budgetRange: "Maximum amount must be greater than or equal to minimum",
+      selectCategory: "Select at least one category",
+      selectSkill: "Select at least one skill",
+      hourlyRateMin: "Hourly rate must be greater than 0",
+    },
+  },
+} as const;
+
+// Type that extracts the shape of translations (with string values instead of literal types)
+type DeepStringify<T> = {
+  [K in keyof T]: T[K] extends object ? DeepStringify<T[K]> : string;
+};
+
+export type TranslationKeys = DeepStringify<typeof translations["pl"]>;

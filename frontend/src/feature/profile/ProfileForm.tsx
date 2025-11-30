@@ -3,6 +3,7 @@ import type { ProfileFormData, ProfileUser } from "./types";
 import ProfileCard from "./ProfileCard";
 import ProfileInput from "./ProfileInput";
 import ProfileTextarea from "./ProfileTextarea";
+import { useLanguage } from "@/i18n";
 
 interface ProfileFormProps {
   user: ProfileUser;
@@ -11,6 +12,7 @@ interface ProfileFormProps {
 }
 
 const ProfileForm = ({ user, onSubmit, isSubmitting }: ProfileFormProps) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<ProfileFormData>({
     username: user.username || "",
     email: user.email || "",
@@ -49,10 +51,10 @@ const ProfileForm = ({ user, onSubmit, isSubmitting }: ProfileFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Info Card */}
-      <ProfileCard title="Podstawowe informacje" icon="📋">
+      <ProfileCard title={t.basicInfo} icon="📋">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ProfileInput
-            label="Nazwa użytkownika"
+            label={t.username}
             name="username"
             value={formData.username}
             onChange={handleChange}
@@ -62,7 +64,7 @@ const ProfileForm = ({ user, onSubmit, isSubmitting }: ProfileFormProps) => {
             icon="👤"
           />
           <ProfileInput
-            label="Email"
+            label={t.email}
             name="email"
             type="email"
             value={formData.email}
@@ -70,14 +72,14 @@ const ProfileForm = ({ user, onSubmit, isSubmitting }: ProfileFormProps) => {
             icon="✉️"
           />
           <ProfileInput
-            label="Imię"
+            label={t.firstName}
             name="first_name"
             value={formData.first_name}
             onChange={handleChange}
             maxLength={50}
           />
           <ProfileInput
-            label="Nazwisko"
+            label={t.lastName}
             name="last_name"
             value={formData.last_name}
             onChange={handleChange}
@@ -86,30 +88,30 @@ const ProfileForm = ({ user, onSubmit, isSubmitting }: ProfileFormProps) => {
         </div>
         <div className="mt-4">
           <ProfileTextarea
-            label="O mnie"
+            label={t.aboutMe}
             name="bio"
             value={formData.bio}
             onChange={handleChange}
             maxLength={500}
-            placeholder="Napisz kilka słów o sobie..."
+            placeholder={t.aboutMePlaceholder}
           />
         </div>
       </ProfileCard>
 
       {/* Location & Experience Card */}
-      <ProfileCard title="Lokalizacja i doświadczenie" icon="🌍">
+      <ProfileCard title={t.locationAndExperience} icon="🌍">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ProfileInput
-            label="Lokalizacja"
+            label={t.location}
             name="location"
             value={formData.location}
             onChange={handleChange}
             maxLength={100}
-            placeholder="np. Warszawa, Polska"
+            placeholder={t.locationPlaceholder}
             icon="📍"
           />
           <ProfileInput
-            label="Lata doświadczenia"
+            label={t.experienceYears}
             name="experience_years"
             type="number"
             value={formData.experience_years}
@@ -121,19 +123,18 @@ const ProfileForm = ({ user, onSubmit, isSubmitting }: ProfileFormProps) => {
         </div>
         <div className="mt-4">
           <ProfileInput
-            label="Umiejętności"
+            label={t.skills}
             name="skills"
             value={formData.skills}
             onChange={handleChange}
-            placeholder="np. React, TypeScript, Python"
+            placeholder={t.skillsPlaceholder}
             icon="🛠️"
-            hint="Oddziel umiejętności przecinkami"
           />
         </div>
       </ProfileCard>
 
       {/* Social Links Card */}
-      <ProfileCard title="Linki społecznościowe" icon="🔗">
+      <ProfileCard title={t.socialLinks} icon="🔗">
         <div className="space-y-4">
           <ProfileInput
             label="URL awatara"
@@ -165,7 +166,7 @@ const ProfileForm = ({ user, onSubmit, isSubmitting }: ProfileFormProps) => {
             />
           </div>
           <ProfileInput
-            label="Strona www"
+            label={t.website}
             name="website"
             type="url"
             value={formData.website}
@@ -186,12 +187,12 @@ const ProfileForm = ({ user, onSubmit, isSubmitting }: ProfileFormProps) => {
           {isSubmitting ? (
             <>
               <span className="loading loading-spinner loading-sm"></span>
-              Zapisywanie...
+              {t.saving}
             </>
           ) : (
             <>
               <span>💾</span>
-              Zapisz zmiany
+              {t.saveChanges}
             </>
           )}
         </button>

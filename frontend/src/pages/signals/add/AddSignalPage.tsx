@@ -3,10 +3,12 @@ import type { SignalFormData } from "@/feature/signals/signalSchema";
 import { useFetcher, useNavigate } from "react-router-dom";
 import type { ActionData } from "./action";
 import { useEffect } from "react";
+import { useLanguage } from "@/i18n";
 
 const AddSignalPage = () => {
   const fetcher = useFetcher<ActionData>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const isLoading = fetcher.state === "submitting";
   const actionData = fetcher.data;
@@ -56,9 +58,9 @@ const AddSignalPage = () => {
     <div className="flex justify-center px-4 py-8">
       <div className="w-full max-w-3xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Utwórz nowy sygnał</h1>
+          <h1 className="text-3xl font-bold mb-2">{t.createNewSignal}</h1>
           <p className="text-base-content/70">
-            Wybierz rodzaj sygnału i wypełnij formularz, aby dodać swój sygnał na radar.
+            {t.signalFormDescription}
           </p>
         </div>
 
@@ -96,7 +98,7 @@ const AddSignalPage = () => {
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span>Sygnał został pomyślnie utworzony! Przekierowuję...</span>
+            <span>{t.savedSuccessfully}</span>
           </div>
         )}
 
