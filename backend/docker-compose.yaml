@@ -14,6 +14,7 @@ services:
       - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
       - OPENAI_KEY=${OPENAI_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://frontend:5173}
     depends_on:
       postgres:
         condition: service_healthy

@@ -18,6 +18,16 @@ class Settings:
     
     # JWT Settings
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 24h default
+    
+    # CORS Settings (comma-separated list of origins)
+    CORS_ORIGINS: list[str] = [
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://frontend:5173"
+        ).split(",")
+        if origin.strip()
+    ]
 
 
 settings = Settings()

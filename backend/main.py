@@ -3,20 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from config import settings
 from routers import auth as auth_router
 from routers import signals as signals_router
 from routers import users as users_router
 from services.db import create_db_and_tables
-
-# Zezwalamy na komunikację z frontendem
-origins = [
-    "http://localhost:5173",      # Vite dev server
-    "http://127.0.0.1:5173",      # Vite dev server (IP)
-    "http://localhost:3000",      # Alternative frontend port
-    "http://127.0.0.1:3000",      # Alternative frontend port (IP)
-    "http://localhost:8080",      # Another common port
-    "http://frontend:5173",       # Docker network (jeśli frontend w kontenerze)
-]
 
 
 @asynccontextmanager
@@ -31,7 +22,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
