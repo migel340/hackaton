@@ -10,6 +10,7 @@ from schemas.signal import (
     UserSignalCreate,
     UserSignalResponse,
     UserSignalsResponse,
+    UserSignalUpdate,
 )
 from services.db import get_session
 from services.dependencies import get_current_user
@@ -115,6 +116,47 @@ def get_user_signals(
         "username": user.username,
         "signals": signals
     }
+
+
+@router.put("/{signal_id}", response_model=UserSignalResponse)
+def update_signal(
+    signal_id: int,
+    signal_update: UserSignalUpdate,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Aktualizuj sygnał.
+    
+    Można zmienić:
+    - **details**: Dowolny JSON z danymi sygnału
+    - **is_active**: Aktywny/nieaktywny
+    """
+    signal = session.get(UserSignal, signal_id)
+    
+    if not signal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Signal not found"
+        )
+    
+    if signal.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only update your own signals"
+        )
+    
+    # Aktualizuj tylko podane pola
+    if signal_update.details is not None:
+        signal.details = signal_update.details
+    if signal_update.is_active is not None:
+        signal.is_active = signal_update.is_active
+    
+    session.add(signal)
+    session.commit()
+    session.refresh(signal)
+    
+    return signal
 
 
 @router.delete("/{signal_id}", status_code=status.HTTP_204_NO_CONTENT)
