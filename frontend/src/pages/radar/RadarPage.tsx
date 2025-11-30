@@ -22,6 +22,7 @@ const RadarPage = () => {
     error,
     refetch,
   } = useRadarData();
+  console.log(data)
 
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -38,11 +39,12 @@ const RadarPage = () => {
   const matchesAsSignals: Signal[] = data.matches.matches.map((match) => ({
     id: match.signal_id,
     user_id: 0,
-    signal_category_id: 0, // Będzie określony przez details
+    signal_category_id: match.signal_category_id ?? 0, // Użyj signal_category_id z API
     details: match.details || { title: "Brak szczegółów" },
     created_at: new Date().toISOString(),
     is_active: true,
     match_score: match.accurate / 100, // konwersja 0-100 na 0-1
+    username: match.username, // Dodaj username z API
   }));
 
   const filteredMatches = matchesAsSignals.filter((signal) =>

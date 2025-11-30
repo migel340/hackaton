@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Signal } from "@/api/signals";
-import { getSignalType } from "@/api/signals";
+import { getSignalType, getSignalTitle } from "@/api/signals";
 import { signalTypeColors } from "./signalTypeColors";
 
 interface MatchesListProps {
@@ -57,6 +57,7 @@ interface MatchCardProps {
 
 const MatchCard = ({ signal, onClick }: MatchCardProps) => {
   const signalType = getSignalType(signal);
+  const title = getSignalTitle(signal.details);
   
   return (
     <div
@@ -71,7 +72,7 @@ const MatchCard = ({ signal, onClick }: MatchCardProps) => {
               style={{ backgroundColor: signalTypeColors[signalType] }}
             />
             <span className="font-semibold text-sm truncate max-w-[140px]">
-              {signal.details.title}
+              {title}
             </span>
           </div>
           {signal.match_score !== undefined && (

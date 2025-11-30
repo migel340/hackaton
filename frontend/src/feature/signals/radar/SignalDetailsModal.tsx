@@ -1,5 +1,5 @@
 import type { Signal } from "@/api/signals";
-import { getSignalType } from "@/api/signals";
+import { getSignalType, getSignalTitle } from "@/api/signals";
 import {
   signalTypeLabels,
   categoryLabels,
@@ -48,7 +48,7 @@ export const SignalDetailsModal = ({
         </div>
 
         {/* Title */}
-        <h3 className="font-bold text-xl mb-2">{signal.details.title}</h3>
+        <h3 className="font-bold text-xl mb-2">{getSignalTitle(signal.details)}</h3>
 
         {/* Author */}
         {signal.username && (
@@ -58,34 +58,94 @@ export const SignalDetailsModal = ({
         )}
 
         {/* Description */}
-        {signal.details.description && (
+        {signal.details?.description && (
           <ModalSection title="Opis">
             <p className="text-base-content/80">{signal.details.description}</p>
           </ModalSection>
         )}
 
-        {/* Investor specific */}
-        {signalType === "investor" &&
-          signal.details.budget_min !== undefined && (
-            <ModalSection title="Budżet">
-              <p className="text-base-content/80">
-                {signal.details.budget_min?.toLocaleString()} -{" "}
-                {signal.details.budget_max?.toLocaleString()} PLN
-              </p>
-            </ModalSection>
-          )}
+        {/* Investor specific - nowa struktura z backendu */}
+        {signalType === "investor" && (
+          <>
+            {signal.details?.ticket_size && (
+              <ModalSection title="Wielkość inwestycji">
+                <p className="text-base-content/80">{signal.details.ticket_size}</p>
+              </ModalSection>
+            )}
+            {signal.details?.stage && signal.details.stage.length > 0 && (
+              <ModalSection title="Etap">
+                <div className="flex flex-wrap gap-2">
+                  {signal.details.stage.map((s) => (
+                    <span key={s} className="badge badge-outline">{s}</span>
+                  ))}
+                </div>
+              </ModalSection>
+            )}
+            {signal.details?.focus_areas && signal.details.focus_areas.length > 0 && (
+              <ModalSection title="Obszary zainteresowań">
+                <div className="flex flex-wrap gap-2">
+                  {signal.details.focus_areas.map((area) => (
+                    <span key={area} className="badge badge-accent badge-outline">{area}</span>
+                  ))}
+                </div>
+              </ModalSection>
+            )}
+            {signal.details?.criteria && signal.details.criteria.length > 0 && (
+              <ModalSection title="Kryteria">
+                <div className="flex flex-wrap gap-2">
+                  {signal.details.criteria.map((c) => (
+                    <span key={c} className="badge badge-secondary badge-outline">{c}</span>
+                  ))}
+                </div>
+              </ModalSection>
+            )}
+            {signal.details?.looking_for && (
+              <ModalSection title="Szukam">
+                <p className="text-base-content/80">{signal.details.looking_for}</p>
+              </ModalSection>
+            )}
+            {signal.details?.value_add && signal.details.value_add.length > 0 && (
+              <ModalSection title="Co oferuję">
+                <div className="flex flex-wrap gap-2">
+                  {signal.details.value_add.map((v) => (
+                    <span key={v} className="badge badge-primary badge-outline">{v}</span>
+                  ))}
+                </div>
+              </ModalSection>
+            )}
+            {/* Stara struktura - budżet */}
+            {signal.details?.budget_min !== undefined && (
+              <ModalSection title="Budżet">
+                <p className="text-base-content/80">
+                  {signal.details.budget_min?.toLocaleString()} -{" "}
+                  {signal.details.budget_max?.toLocaleString()} PLN
+                </p>
+              </ModalSection>
+            )}
+          </>
+        )}
 
         {/* Freelancer specific */}
         {signalType === "freelancer" && (
           <>
-            {signal.details.hourly_rate && (
+            {signal.details?.hourly_rate && (
               <ModalSection title="Stawka godzinowa">
                 <p className="text-base-content/80">
                   {signal.details.hourly_rate} PLN/h
                 </p>
               </ModalSection>
             )}
-            {signal.details.skills && signal.details.skills.length > 0 && (
+            {signal.details?.experience && (
+              <ModalSection title="Doświadczenie">
+                <p className="text-base-content/80">{signal.details.experience}</p>
+              </ModalSection>
+            )}
+            {signal.details?.availability && (
+              <ModalSection title="Dostępność">
+                <p className="text-base-content/80">{signal.details.availability}</p>
+              </ModalSection>
+            )}
+            {signal.details?.skills && signal.details.skills.length > 0 && (
               <ModalSection title="Umiejętności">
                 <BadgeList
                   items={signal.details.skills}
@@ -100,7 +160,22 @@ export const SignalDetailsModal = ({
         {/* Idea specific */}
         {signalType === "idea" && (
           <>
-            {signal.details.funding_min !== undefined && (
+            {signal.details?.problem && (
+              <ModalSection title="Problem">
+                <p className="text-base-content/80">{signal.details.problem}</p>
+              </ModalSection>
+            )}
+            {signal.details?.solution && (
+              <ModalSection title="Rozwiązanie">
+                <p className="text-base-content/80">{signal.details.solution}</p>
+              </ModalSection>
+            )}
+            {signal.details?.market && (
+              <ModalSection title="Rynek">
+                <p className="text-base-content/80">{signal.details.market}</p>
+              </ModalSection>
+            )}
+            {signal.details?.funding_min !== undefined && (
               <ModalSection title="Szukane finansowanie">
                 <p className="text-base-content/80">
                   {signal.details.funding_min?.toLocaleString()} -{" "}
@@ -108,7 +183,7 @@ export const SignalDetailsModal = ({
                 </p>
               </ModalSection>
             )}
-            {signal.details.needed_skills &&
+            {signal.details?.needed_skills &&
               signal.details.needed_skills.length > 0 && (
                 <ModalSection title="Wymagane umiejętności">
                   <BadgeList
@@ -122,7 +197,7 @@ export const SignalDetailsModal = ({
         )}
 
         {/* Categories */}
-        {signal.details.categories && signal.details.categories.length > 0 && (
+        {signal.details?.categories && signal.details.categories.length > 0 && (
           <ModalSection title="Kategorie">
             <BadgeList
               items={signal.details.categories}

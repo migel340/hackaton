@@ -3,19 +3,54 @@ import type { SignalType, Category, Skill } from "@/feature/signals/signalSchema
 
 // Typy dla sygnałów - nowa struktura z API
 export interface SignalDetails {
-  title: string;
+  title?: string;
   description?: string;
-  // Investor specific
+  // Investor specific (z backendu)
+  type?: string; // np. "Angel Investor"
+  ticket_size?: string;
+  stage?: string[];
+  focus_areas?: string[];
+  criteria?: string[];
+  looking_for?: string;
+  value_add?: string[];
+  // Investor specific (stare)
   budget_min?: number;
   budget_max?: number;
   categories?: Category[];
   // Freelancer specific
   hourly_rate?: number;
   skills?: Skill[];
+  experience?: string;
+  availability?: string;
   // Idea specific
   funding_min?: number;
   funding_max?: number;
   needed_skills?: Skill[];
+  problem?: string;
+  solution?: string;
+  market?: string;
+}
+
+// Helper do wyciągania tytułu z details
+export function getSignalTitle(details: SignalDetails | null | undefined): string {
+  if (!details) return "Brak szczegółów";
+  
+  // Jeśli ma title, użyj go
+  if (details.title) return details.title;
+  
+  // Dla inwestora - użyj typu
+  if (details.type) return details.type;
+  
+  // Dla freelancera - użyj pierwszego skilla lub "Freelancer"
+  if (details.skills && details.skills.length > 0) {
+    return `Freelancer: ${details.skills.slice(0, 2).join(", ")}`;
+  }
+  
+  // Dla idei - użyj problemu lub "Pomysł"
+  if (details.problem) return details.problem.slice(0, 50) + (details.problem.length > 50 ? "..." : "");
+  
+  // Fallback
+  return "Sygnał";
 }
 
 export interface Signal {
@@ -47,13 +82,17 @@ export interface MatchedSignalsResponse {
 }
 
 // Odpowiedź z API dla matchowania
+export interface MatchItem {
+  signal_id: number;
+  accurate: number;
+  details: SignalDetails | null;
+  signal_category_id?: number;
+  username?: string;
+}
+
 export interface MatchApiResponse {
   source_signal_id: number;
-  matches: Array<{
-    signal_id: number;
-    accurate: number;
-    details: SignalDetails | null;
-  }>;
+  matches: MatchItem[];
 }
 
 /**

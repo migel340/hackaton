@@ -21,15 +21,15 @@ def seed_test_users(session: Session) -> dict[str, User]:
     """Dodaje testowych użytkowników."""
     users_data = [
         {
-            "username": "jan_freelancer",
-            "email": "jan@freelancer.pl",
-            "password": "Test1234!",
-            "first_name": "Jan",
-            "last_name": "Kowalski",
+            "username": "admin",
+            "email": "admin@gmail.com",
+            "password": "12345678",
+            "first_name": "Admin",
+            "last_name": "Testowy",
             "bio": "Senior Python/JS Developer z 8-letnim doświadczeniem. Specjalizuję się w FastAPI, React i AI.",
             "location": "Warszawa, Polska",
-            "linkedin_url": "https://linkedin.com/in/jan-kowalski",
-            "github_url": "https://github.com/jan-kowalski",
+            "linkedin_url": "https://linkedin.com/in/admin-testowy",
+            "github_url": "https://github.com/admin-dev",
             "skills": ["Python", "FastAPI", "React", "TypeScript", "PostgreSQL", "Docker", "AI/ML"],
             "experience_years": 8,
         },
@@ -95,6 +95,120 @@ def seed_test_users(session: Session) -> dict[str, User]:
             "skills": ["Angel Investing", "Healthcare", "EdTech", "Mentoring"],
             "experience_years": 20,
         },
+        # Dodatkowi freelancerzy
+        {
+            "username": "tomek_mobile",
+            "email": "tomek@mobile.dev",
+            "password": "Test1234!",
+            "first_name": "Tomasz",
+            "last_name": "Kaczmarek",
+            "bio": "Mobile developer iOS/Android. Flutter enthusiast. Buduję aplikacje, które kochają użytkownicy.",
+            "location": "Łódź, Polska",
+            "linkedin_url": "https://linkedin.com/in/tomek-kaczmarek",
+            "github_url": "https://github.com/tomek-mobile",
+            "skills": ["Flutter", "Dart", "Swift", "Kotlin", "Firebase", "React Native"],
+            "experience_years": 6,
+        },
+        {
+            "username": "ewa_devops",
+            "email": "ewa@cloudops.pl",
+            "password": "Test1234!",
+            "first_name": "Ewa",
+            "last_name": "Mazur",
+            "bio": "DevOps Engineer & Cloud Architect. AWS Certified. Automatyzuję wszystko co się da.",
+            "location": "Katowice, Polska",
+            "linkedin_url": "https://linkedin.com/in/ewa-mazur-devops",
+            "skills": ["AWS", "Kubernetes", "Terraform", "Docker", "CI/CD", "Python", "Go"],
+            "experience_years": 7,
+        },
+        {
+            "username": "michal_data",
+            "email": "michal@dataeng.io",
+            "password": "Test1234!",
+            "first_name": "Michał",
+            "last_name": "Pawlak",
+            "bio": "Data Engineer & Analytics. Budowanie pipeline'ów danych i dashboardów. Ex-Spotify.",
+            "location": "Warszawa, Polska",
+            "linkedin_url": "https://linkedin.com/in/michal-pawlak-data",
+            "github_url": "https://github.com/michal-data",
+            "skills": ["Python", "Spark", "Airflow", "dbt", "Snowflake", "BigQuery", "Tableau"],
+            "experience_years": 5,
+        },
+        {
+            "username": "kasia_marketing",
+            "email": "kasia@growth.pl",
+            "password": "Test1234!",
+            "first_name": "Katarzyna",
+            "last_name": "Lewandowska",
+            "bio": "Growth Hacker & Digital Marketing Expert. Pomagam startupom skalować acquisition.",
+            "location": "Warszawa, Polska",
+            "linkedin_url": "https://linkedin.com/in/kasia-growth",
+            "website": "https://kasia-growth.pl",
+            "skills": ["SEO", "Google Ads", "Facebook Ads", "Analytics", "CRO", "Content Marketing"],
+            "experience_years": 8,
+        },
+        # Dodatkowi founderzy startupów
+        {
+            "username": "bartek_health",
+            "email": "bartek@healthapp.pl",
+            "password": "Test1234!",
+            "first_name": "Bartosz",
+            "last_name": "Sikora",
+            "bio": "Lekarz i founder. Buduję aplikację do zdalnego monitoringu pacjentów.",
+            "location": "Kraków, Polska",
+            "linkedin_url": "https://linkedin.com/in/bartek-sikora-md",
+            "skills": ["Medicine", "Healthcare", "Product Vision", "Clinical Research"],
+            "experience_years": 12,
+        },
+        {
+            "username": "ola_ecommerce",
+            "email": "ola@shopify.expert",
+            "password": "Test1234!",
+            "first_name": "Aleksandra",
+            "last_name": "Wójcik",
+            "bio": "Ex-Allegro PM. Buduję platformę dla małych sklepów e-commerce z AI rekomendacjami.",
+            "location": "Poznań, Polska",
+            "linkedin_url": "https://linkedin.com/in/ola-wojcik",
+            "skills": ["E-commerce", "Product Management", "Marketplace", "AI/ML"],
+            "experience_years": 9,
+        },
+        {
+            "username": "krzysztof_green",
+            "email": "krzysztof@greentech.eco",
+            "password": "Test1234!",
+            "first_name": "Krzysztof",
+            "last_name": "Jankowski",
+            "bio": "CleanTech enthusiast. Rozwijam platformę do śledzenia śladu węglowego dla firm.",
+            "location": "Gdynia, Polska",
+            "linkedin_url": "https://linkedin.com/in/krzysztof-green",
+            "skills": ["Sustainability", "Carbon Accounting", "ESG", "Business Development"],
+            "experience_years": 6,
+        },
+        # Dodatkowi inwestorzy
+        {
+            "username": "marcin_cv",
+            "email": "marcin@corpventures.pl",
+            "password": "Test1234!",
+            "first_name": "Marcin",
+            "last_name": "Kowalczyk",
+            "bio": "Corporate Venture Capital. Inwestuję w startupy dla dużej grupy energetycznej.",
+            "location": "Warszawa, Polska",
+            "linkedin_url": "https://linkedin.com/in/marcin-cvc",
+            "skills": ["Corporate VC", "Energy", "CleanTech", "IoT", "Strategic Partnerships"],
+            "experience_years": 14,
+        },
+        {
+            "username": "magda_impact",
+            "email": "magda@impact-fund.org",
+            "password": "Test1234!",
+            "first_name": "Magdalena",
+            "last_name": "Nowicka",
+            "bio": "Impact investor. Szukam startupów rozwiązujących problemy społeczne i środowiskowe.",
+            "location": "Kraków, Polska",
+            "linkedin_url": "https://linkedin.com/in/magda-impact",
+            "skills": ["Impact Investing", "ESG", "Social Enterprise", "Grant Writing"],
+            "experience_years": 11,
+        },
     ]
     
     created_users = {}
@@ -130,7 +244,7 @@ def seed_test_signals(session: Session, users: dict[str, User]) -> list[UserSign
     signals_data = [
         # Freelancerzy (category_id=1)
         {
-            "user": "jan_freelancer",
+            "user": "admin",
             "signal_category_id": 1,
             "details": {
                 "role": "Backend Developer",
@@ -153,9 +267,9 @@ def seed_test_signals(session: Session, users: dict[str, User]) -> list[UserSign
                 "portfolio": "https://dribbble.com/anna-nowak",
             },
         },
-        # Jan ma też drugi sygnał jako freelancer
+        # Admin ma też drugi sygnał jako freelancer
         {
-            "user": "jan_freelancer",
+            "user": "admin",
             "signal_category_id": 1,
             "details": {
                 "role": "AI/ML Consultant",
@@ -235,6 +349,163 @@ def seed_test_signals(session: Session, users: dict[str, User]) -> list[UserSign
                 "looking_for": "Passionate founders, solving real problems",
                 "value_add": ["Mentoring", "Healthcare industry connections", "Product strategy"],
                 "criteria": ["Strong team", "Clear problem-solution fit", "Scalable model"],
+            },
+        },
+        # Dodatkowe sygnały freelancerów
+        {
+            "user": "tomek_mobile",
+            "signal_category_id": 1,
+            "details": {
+                "role": "Mobile Developer",
+                "skills": ["Flutter", "Dart", "Swift", "Kotlin", "Firebase"],
+                "hourly_rate": "120-180 PLN",
+                "availability": "full-time",
+                "looking_for": "Startupy potrzebujące aplikacji mobilnej iOS/Android",
+                "experience": "6 lat, 15+ opublikowanych aplikacji w App Store i Google Play",
+                "portfolio": "https://play.google.com/store/apps/developer?id=TomekApps",
+            },
+        },
+        {
+            "user": "ewa_devops",
+            "signal_category_id": 1,
+            "details": {
+                "role": "DevOps Engineer / Cloud Architect",
+                "skills": ["AWS", "Kubernetes", "Terraform", "Docker", "CI/CD", "Python"],
+                "hourly_rate": "150-220 PLN",
+                "availability": "part-time (15h/tydzień)",
+                "looking_for": "Startupy potrzebujące skalowalnej infrastruktury cloud",
+                "certifications": ["AWS Solutions Architect Professional", "CKA", "CKS"],
+                "experience": "7 lat, infrastructure dla 50+ projektów",
+            },
+        },
+        {
+            "user": "michal_data",
+            "signal_category_id": 1,
+            "details": {
+                "role": "Data Engineer",
+                "skills": ["Python", "Spark", "Airflow", "dbt", "Snowflake", "BigQuery"],
+                "hourly_rate": "140-200 PLN",
+                "availability": "full-time lub kontrakt",
+                "looking_for": "Firmy potrzebujące data pipeline'ów i analytics",
+                "experience": "Ex-Spotify, budowałem pipelines dla 100M+ eventów dziennie",
+                "specialization": "Real-time analytics, Data Warehousing, ML pipelines",
+            },
+        },
+        {
+            "user": "kasia_marketing",
+            "signal_category_id": 1,
+            "details": {
+                "role": "Growth Marketing Consultant",
+                "skills": ["SEO", "Google Ads", "Facebook Ads", "Analytics", "CRO"],
+                "hourly_rate": "100-150 PLN",
+                "availability": "projekty + retainer",
+                "looking_for": "Startupy B2C i B2B potrzebujące growth hackingu",
+                "results": "Średnio 3x wzrost acquisition dla klientów w 6 miesięcy",
+                "industries": ["SaaS", "E-commerce", "Mobile Apps", "FinTech"],
+            },
+        },
+        # Dodatkowe pomysły na startup
+        {
+            "user": "bartek_health",
+            "signal_category_id": 2,
+            "details": {
+                "name": "MediMonitor",
+                "description": "Aplikacja do zdalnego monitoringu pacjentów z chorobami przewlekłymi. Integracja z urządzeniami IoT (ciśnieniomierze, glukometry).",
+                "stage": "Prototyp + 50 pacjentów w pilotażu",
+                "looking_for": ["CTO - Mobile/IoT", "Backend Developer", "Inwestor seed"],
+                "funding_needed": "1M PLN",
+                "market": "HealthTech, B2B2C (przez przychodnie)",
+                "traction": "3 przychodnie w pilotażu, LOI od 2 sieci medycznych",
+                "tech_requirements": ["Flutter", "Python", "IoT", "HIPAA compliance"],
+                "competitive_advantage": "Jestem lekarzem, znam bolączki systemu od środka",
+            },
+        },
+        {
+            "user": "ola_ecommerce",
+            "signal_category_id": 2,
+            "details": {
+                "name": "SmartShop AI",
+                "description": "Platforma dla małych e-commerce z AI rekomendacjami produktów, automatycznym pricingiem i prognozowaniem popytu.",
+                "stage": "MVP w budowie",
+                "looking_for": ["ML Engineer", "Frontend Developer", "Inwestor pre-seed"],
+                "funding_needed": "400k PLN",
+                "market": "E-commerce Tools, B2B SaaS",
+                "problem": "Małe sklepy nie mają dostępu do zaawansowanej analityki jak duzi gracze",
+                "tech_stack": ["Python", "FastAPI", "React", "TensorFlow"],
+                "traction": "20 sklepów na liście oczekujących",
+            },
+        },
+        {
+            "user": "krzysztof_green",
+            "signal_category_id": 2,
+            "details": {
+                "name": "CarbonTrack",
+                "description": "Platforma SaaS do automatycznego śledzenia i raportowania śladu węglowego dla firm MŚP. Zgodność z CSRD.",
+                "stage": "Wczesne MVP",
+                "looking_for": ["Fullstack Developer", "Sales/BD", "Inwestor seed"],
+                "funding_needed": "600k PLN",
+                "market": "CleanTech, RegTech, B2B",
+                "problem": "Od 2025 firmy muszą raportować ESG, a nie mają narzędzi",
+                "tech_requirements": ["Python", "React", "Data Integration", "Reporting"],
+                "competitive_advantage": "Partnerstwo z firmą audytorską Big4",
+            },
+        },
+        {
+            "user": "startup_adam",
+            "signal_category_id": 2,
+            "details": {
+                "name": "AIRecruiter",
+                "description": "Platforma do automatyzacji rekrutacji IT. AI analizuje CV, prowadzi wstępne rozmowy i ocenia dopasowanie kulturowe.",
+                "stage": "Idea validated",
+                "looking_for": ["Co-founder z doświadczeniem HR-Tech", "ML Engineer"],
+                "funding_needed": "250k PLN na MVP",
+                "market": "HR-Tech, B2B",
+                "problem": "Rekruterzy tracą 80% czasu na niewłaściwych kandydatów",
+                "tech_requirements": ["Python", "LLM", "NLP", "React"],
+            },
+        },
+        # Dodatkowe sygnały inwestorów
+        {
+            "user": "marcin_cv",
+            "signal_category_id": 3,
+            "details": {
+                "type": "Corporate VC",
+                "focus_areas": ["Energy", "CleanTech", "IoT", "Smart Grid"],
+                "ticket_size": "1M - 5M PLN",
+                "stage": ["seed", "Series A"],
+                "looking_for": "Startupy z technologią dla sektora energetycznego",
+                "value_add": ["Dostęp do klientów enterprise", "Pilotaże w grupie", "Regulatory support"],
+                "criteria": ["Working product", "B2B model", "Możliwość integracji z naszymi systemami"],
+                "sweet_spot": "Smart metering, energy storage, grid optimization",
+            },
+        },
+        {
+            "user": "magda_impact",
+            "signal_category_id": 3,
+            "details": {
+                "type": "Impact Fund",
+                "focus_areas": ["Climate", "Social Impact", "Accessibility", "Education"],
+                "ticket_size": "200k - 800k PLN",
+                "stage": ["pre-seed", "seed"],
+                "looking_for": "Startupy mierzące swój impact (SDG aligned)",
+                "value_add": ["Impact measurement framework", "ESG reporting", "Grant co-funding"],
+                "criteria": ["Clear theory of change", "Measurable outcomes", "Sustainable business model"],
+                "portfolio_examples": ["EdTech for underprivileged", "Circular economy", "Mental health"],
+            },
+        },
+        # Admin szukający co-foundera
+        {
+            "user": "admin",
+            "signal_category_id": 2,
+            "details": {
+                "name": "DevMentor",
+                "description": "Platforma łącząca junior developerów z seniorami na sesje mentorskie 1:1. Subscription model.",
+                "stage": "Walidacja pomysłu",
+                "looking_for": ["Co-founder biznesowy", "Marketing/Growth"],
+                "funding_needed": "Bootstrapped + ewentualnie 100k PLN",
+                "market": "EdTech, B2C + B2B (firmy)",
+                "my_role": "Zbuduję platformę sam, szukam kogoś od biznesu",
+                "validation": "50 osób na landing page, 30% conversion na waiting list",
             },
         },
     ]
@@ -329,16 +600,25 @@ def print_test_instructions():
 🔐 TESTOWE KONTA (hasło dla wszystkich: Test1234!)
 
 FREELANCERZY:
-  - jan@freelancer.pl   (Jan Kowalski - Python/AI Developer)
-  - anna@freelancer.pl  (Anna Nowak - UX/UI + Frontend)
+  - admin@gmail.com       (Admin - Python/AI Developer + pomysł DevMentor, hasło: 12345678)
+  - anna@freelancer.pl    (Anna Nowak - UX/UI + Frontend)
+  - tomek@mobile.dev      (Tomasz Kaczmarek - Mobile iOS/Android/Flutter)
+  - ewa@cloudops.pl       (Ewa Mazur - DevOps/Cloud AWS/K8s)
+  - michal@dataeng.io     (Michał Pawlak - Data Engineer, ex-Spotify)
+  - kasia@growth.pl       (Katarzyna Lewandowska - Growth Marketing)
 
 STARTUPY:
-  - adam@startup.io     (Adam Wiśniewski - EduAI, RemoteTeams)
-  - maria@fintech.pl    (Maria Zielińska - FinBot)
+  - adam@startup.io       (Adam Wiśniewski - EduAI, RemoteTeams, AIRecruiter)
+  - maria@fintech.pl      (Maria Zielińska - FinBot)
+  - bartek@healthapp.pl   (Bartosz Sikora - MediMonitor, lekarz-founder)
+  - ola@shopify.expert    (Aleksandra Wójcik - SmartShop AI, ex-Allegro)
+  - krzysztof@greentech.eco (Krzysztof Jankowski - CarbonTrack)
 
 INWESTORZY:
-  - piotr@vc-fund.pl    (Piotr Malinowski - VC Partner)
-  - katarzyna@angel.pl  (Katarzyna Dąbrowska - Angel)
+  - piotr@vc-fund.pl      (Piotr Malinowski - VC Partner AI/SaaS + advisor)
+  - katarzyna@angel.pl    (Katarzyna Dąbrowska - Angel HealthTech/EdTech)
+  - marcin@corpventures.pl (Marcin Kowalczyk - Corporate VC Energy/CleanTech)
+  - magda@impact-fund.org (Magdalena Nowicka - Impact Fund Climate/Social)
 
 📡 TESTOWANIE ENDPOINTÓW:
 
@@ -359,46 +639,39 @@ INWESTORZY:
     Query: ?min_accurate=50 (opcjonalnie)
     → Wszystkie dopasowania dla wszystkich sygnałów użytkownika
 
-🎯 OCZEKIWANE WYNIKI MATCHOWANIA:
+🎯 SCENARIUSZE MATCHOWANIA:
 
-FREELANCER Jan (sygnały Python/AI):
-  → Powinien matchować z: EduAI (Adam), FinBot (Maria), RemoteTeams (Adam)
-  → Oczekiwany accurate:
-     - EduAI: 70-90% (Python, AI, React)
-     - FinBot: 80-95% (Python, FastAPI, LLM)
-     - RemoteTeams: 40-60% (potrzebuje głównie UX)
+FREELANCER → STARTUP (szukają się nawzajem):
+  - Jan (Python/AI) → EduAI, FinBot, AIRecruiter (high match)
+  - Anna (UX/Frontend) → RemoteTeams, SmartShop AI (high match)
+  - Tomek (Mobile) → MediMonitor (perfect match - szukają Flutter!)
+  - Ewa (DevOps) → wszystkie startupy potrzebujące infra
+  - Michał (Data) → SmartShop AI (ML), CarbonTrack (Data)
+  - Kasia (Marketing) → wszystkie startupy B2C
 
-FREELANCER Anna (UX/UI + Frontend):
-  → Powinien matchować z: EduAI, RemoteTeams
-  → Oczekiwany accurate:
-     - EduAI: 60-80% (React frontend)
-     - RemoteTeams: 80-95% (szuka UX Designer)
-     - FinBot: 30-50% (potrzebuje backend)
+STARTUP → INVESTOR (szukają się nawzajem):
+  - EduAI → Katarzyna (EdTech angel - perfect!), Piotr (AI VC)
+  - MediMonitor → Katarzyna (HealthTech), Magda (Impact)
+  - CarbonTrack → Marcin (CleanTech CVC), Magda (Climate Impact)
+  - SmartShop AI → Piotr (SaaS VC)
+  - FinBot → Piotr (AI/B2B VC)
 
-STARTUP Adam (EduAI, RemoteTeams):
-  → Powinien matchować z: Jan, Anna (freelancerzy) + Piotr, Katarzyna (inwestorzy)
-  → Oczekiwany accurate:
-     - EduAI + Piotr: 70-85% (AI, SaaS focus)
-     - EduAI + Katarzyna: 85-95% (EdTech focus!)
-     - EduAI + Jan: 80-95% (Python, AI skills)
-     - RemoteTeams + Anna: 75-90% (UX needed)
+INVESTOR → STARTUP (aktywne szukanie):
+  - Marcin (CVC Energy) → CarbonTrack (perfect match!)
+  - Magda (Impact) → CarbonTrack, MediMonitor, EduAI
+  - Katarzyna (Angel) → EduAI, MediMonitor
 
-INVESTOR Piotr (VC - AI/SaaS):
-  → Powinien matchować z: EduAI, FinBot, RemoteTeams
-  → Oczekiwany accurate:
-     - EduAI: 80-95% (AI, SaaS, seed stage)
-     - FinBot: 60-75% (pre-seed, B2B)
-     - RemoteTeams: 50-70% (concept stage)
+CIEKAWE PRZYPADKI:
+  - Admin ma 3 sygnały: 2x freelancer + 1x startup (DevMentor)
+  - Adam ma 4 pomysły na startup - różne potrzeby
 
-INVESTOR Katarzyna (Angel - HealthTech/EdTech):
-  → Powinien matchować z: EduAI (idealne!), FinBot
-  → Oczekiwany accurate:
-     - EduAI: 90-100% (EdTech - perfect match!)
-     - FinBot: 40-60% (FinTech nie jest focus)
-     - RemoteTeams: 30-50% (HR-Tech nie jest focus)
+MAPOWANIE SYGNAŁÓW:
+  - FREELANCER (1) szuka → STARTUP_IDEA (2)
+  - STARTUP_IDEA (2) szuka → FREELANCER (1) i INVESTOR (3)
+  - INVESTOR (3) szuka → STARTUP_IDEA (2)
 """)
     print("=" * 70)
-    print("🚀 Swagger UI: http://localhost:8000/docs")
+    print("🚀 Swagger UI: http://localhost:4000/docs")
     print("=" * 70)
 
 
