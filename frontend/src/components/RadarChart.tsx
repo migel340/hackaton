@@ -7,6 +7,7 @@ import {
   signalTypeColors,
   signalTypeColorsHover,
 } from "@/feature/signals/radar/signalTypeColors";
+import { useLanguage } from "@/i18n";
 
 // Theme colors
 const themeColors = {
@@ -76,6 +77,7 @@ const RadarChart = ({
   focusedSignalId,
   className = "",
 }: RadarChartProps) => {
+  const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -846,7 +848,7 @@ console.log(userSignal)
           ))}
         </div>
         <div className="text-xs text-base-content/50">
-          Scroll aby przybliżyć/oddalić • Przeciągnij aby przesunąć
+          {t.radar?.scrollToZoom} • {t.radar?.dragToMove}
         </div>
       </div>
 

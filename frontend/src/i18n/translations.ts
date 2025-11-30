@@ -24,6 +24,8 @@ export const translations = {
     radar: {
       focusOnRadar: "Pokaż",
       details: "Szczegóły",
+      scrollToZoom: "Scroll aby przybliżyć/oddalić",
+      dragToMove: "Przeciągnij aby przesunąć",
     },
 
     // Signal Types
@@ -160,6 +162,8 @@ export const translations = {
     radar: {
       focusOnRadar: "Focus",
       details: "Details",
+      scrollToZoom: "Scroll to zoom in/out",
+      dragToMove: "Drag to move",
     },
 
     // Signal Types

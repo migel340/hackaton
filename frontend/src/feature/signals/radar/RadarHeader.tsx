@@ -37,7 +37,7 @@ export const RadarHeader = ({
       </div>
 
       <div className="bg-base-100/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-base-content/20 shadow-md flex items-center gap-3">
-        <span className="text-sm font-medium">{t.yourActivity}</span>
+        <span className="text font-medium whitespace-nowrap">{t.yourActivity}</span>
         <select
           className="select select-sm select-bordered bg-base-100 min-w-[200px]"
           value={selectedUserSignalId || ""}
