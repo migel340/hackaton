@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import type { Signal } from "@/api/signals";
+import { getSignalType } from "@/api/signals";
 import { signalTypeLabels } from "@/feature/signals/signalSchema";
 import {
   signalTypeColors,
@@ -62,7 +63,8 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     const positions: BlipPosition[] = matches.map((signal, index) => {
       // Odległość od środka jest odwrotnością match_score
       // match_score = 1.0 -> blisko środka, match_score = 0.0 -> na krawędzi
-      const distanceRatio = 1 - signal.match_score;
+      const matchScore = signal.match_score ?? 0.5; // Default to 0.5 if no match_score
+      const distanceRatio = 1 - matchScore;
       const distance = distanceRatio * baseRadius * 0.9 + baseRadius * 0.1;
 
       // Rozmieść równomiernie pod różnymi kątami z pewnym losowym odchyleniem
@@ -206,6 +208,7 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
     // Draw blips (matched signals)
     blipPositions.forEach(({ signal, x: worldX, y: worldY }) => {
       const { x, y } = worldToScreen(worldX, worldY);
+      const signalType = getSignalType(signal);
       
       // Skip if outside visible area (with some margin)
       if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
@@ -214,8 +217,8 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
       const baseBlipRadius = isHovered ? 20 : 14;
       const blipRadius = baseBlipRadius * Math.min(view.scale, 1.5);
       const color = isHovered
-        ? signalTypeColorsHover[signal.type]
-        : signalTypeColors[signal.type];
+        ? signalTypeColorsHover[signalType]
+        : signalTypeColors[signalType];
 
       // Glow effect
       const glow = ctx.createRadialGradient(x, y, 0, x, y, blipRadius * 2);
@@ -242,15 +245,17 @@ const RadarChart = ({ userSignal, matches, onSignalClick, className = "" }: Rada
         ctx.fillStyle = "#1e293b";
         ctx.font = `bold ${Math.max(10, 12 * view.scale)}px sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillText(`${Math.round(signal.match_score * 100)}%`, x, y - blipRadius - 8);
+        const matchScore = signal.match_score ?? 0;
+        ctx.fillText(`${Math.round(matchScore * 100)}%`, x, y - blipRadius - 8);
         if (isHovered || view.scale > 1.5) {
-          ctx.fillText(signal.title.substring(0, 20), x, y + blipRadius + 16);
+          ctx.fillText(signal.details.title.substring(0, 20), x, y + blipRadius + 16);
         }
       }
     });
 
     // Draw user signal in center
-    const userColor = signalTypeColors[userSignal.type];
+    const userSignalType = getSignalType(userSignal);
+    const userColor = signalTypeColors[userSignalType];
     const userRadius = 22 * Math.min(view.scale, 1.5);
     
     // User glow

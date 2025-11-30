@@ -1,4 +1,5 @@
 import type { Signal } from "@/api/signals";
+import { getSignalType } from "@/api/signals";
 import { signalTypeLabels } from "@/feature/signals/signalSchema";
 import { signalTypeBgColors } from "./signalTypeColors";
 
@@ -28,7 +29,7 @@ export const RadarFilterButtons = ({
 
       {/* Type filter buttons */}
       {Object.entries(signalTypeLabels).map(([type, label]) => {
-        const count = matches.filter((s) => s.type === type).length;
+        const count = matches.filter((s) => getSignalType(s) === type).length;
         const bgColor = signalTypeBgColors[type];
         
         return (

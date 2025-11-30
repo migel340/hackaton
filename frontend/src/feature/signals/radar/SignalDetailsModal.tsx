@@ -1,4 +1,5 @@
 import type { Signal } from "@/api/signals";
+import { getSignalType } from "@/api/signals";
 import {
   signalTypeLabels,
   categoryLabels,
@@ -17,6 +18,7 @@ export const SignalDetailsModal = ({
 }: SignalDetailsModalProps) => {
   if (!signal) return null;
 
+  const signalType = getSignalType(signal);
   const getTypeLabel = (type: string) =>
     signalTypeLabels[type as keyof typeof signalTypeLabels] || type;
 
@@ -35,16 +37,18 @@ export const SignalDetailsModal = ({
         <div className="flex items-center gap-3 mb-4">
           <div
             className="w-4 h-4 rounded-full"
-            style={{ backgroundColor: signalTypeColors[signal.type] }}
+            style={{ backgroundColor: signalTypeColors[signalType] }}
           />
-          <span className="badge badge-outline">{getTypeLabel(signal.type)}</span>
-          <span className="badge badge-success">
-            {Math.round(signal.match_score * 100)}% dopasowania
-          </span>
+          <span className="badge badge-outline">{getTypeLabel(signalType)}</span>
+          {signal.match_score !== undefined && (
+            <span className="badge badge-success">
+              {Math.round(signal.match_score * 100)}% dopasowania
+            </span>
+          )}
         </div>
 
         {/* Title */}
-        <h3 className="font-bold text-xl mb-2">{signal.title}</h3>
+        <h3 className="font-bold text-xl mb-2">{signal.details.title}</h3>
 
         {/* Author */}
         {signal.username && (
@@ -54,37 +58,37 @@ export const SignalDetailsModal = ({
         )}
 
         {/* Description */}
-        {signal.metadata.description && (
+        {signal.details.description && (
           <ModalSection title="Opis">
-            <p className="text-base-content/80">{signal.metadata.description}</p>
+            <p className="text-base-content/80">{signal.details.description}</p>
           </ModalSection>
         )}
 
         {/* Investor specific */}
-        {signal.type === "investor" &&
-          signal.metadata.budget_min !== undefined && (
+        {signalType === "investor" &&
+          signal.details.budget_min !== undefined && (
             <ModalSection title="Budżet">
               <p className="text-base-content/80">
-                {signal.metadata.budget_min?.toLocaleString()} -{" "}
-                {signal.metadata.budget_max?.toLocaleString()} PLN
+                {signal.details.budget_min?.toLocaleString()} -{" "}
+                {signal.details.budget_max?.toLocaleString()} PLN
               </p>
             </ModalSection>
           )}
 
         {/* Freelancer specific */}
-        {signal.type === "freelancer" && (
+        {signalType === "freelancer" && (
           <>
-            {signal.metadata.hourly_rate && (
+            {signal.details.hourly_rate && (
               <ModalSection title="Stawka godzinowa">
                 <p className="text-base-content/80">
-                  {signal.metadata.hourly_rate} PLN/h
+                  {signal.details.hourly_rate} PLN/h
                 </p>
               </ModalSection>
             )}
-            {signal.metadata.skills && signal.metadata.skills.length > 0 && (
+            {signal.details.skills && signal.details.skills.length > 0 && (
               <ModalSection title="Umiejętności">
                 <BadgeList
-                  items={signal.metadata.skills}
+                  items={signal.details.skills}
                   labels={skillLabels}
                   variant="primary"
                 />
@@ -94,21 +98,21 @@ export const SignalDetailsModal = ({
         )}
 
         {/* Idea specific */}
-        {signal.type === "idea" && (
+        {signalType === "idea" && (
           <>
-            {signal.metadata.funding_min !== undefined && (
+            {signal.details.funding_min !== undefined && (
               <ModalSection title="Szukane finansowanie">
                 <p className="text-base-content/80">
-                  {signal.metadata.funding_min?.toLocaleString()} -{" "}
-                  {signal.metadata.funding_max?.toLocaleString()} PLN
+                  {signal.details.funding_min?.toLocaleString()} -{" "}
+                  {signal.details.funding_max?.toLocaleString()} PLN
                 </p>
               </ModalSection>
             )}
-            {signal.metadata.needed_skills &&
-              signal.metadata.needed_skills.length > 0 && (
+            {signal.details.needed_skills &&
+              signal.details.needed_skills.length > 0 && (
                 <ModalSection title="Wymagane umiejętności">
                   <BadgeList
-                    items={signal.metadata.needed_skills}
+                    items={signal.details.needed_skills}
                     labels={skillLabels}
                     variant="secondary"
                   />
@@ -118,10 +122,10 @@ export const SignalDetailsModal = ({
         )}
 
         {/* Categories */}
-        {signal.metadata.categories && signal.metadata.categories.length > 0 && (
+        {signal.details.categories && signal.details.categories.length > 0 && (
           <ModalSection title="Kategorie">
             <BadgeList
-              items={signal.metadata.categories}
+              items={signal.details.categories}
               labels={categoryLabels}
               variant="accent"
             />

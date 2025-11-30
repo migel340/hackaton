@@ -43,7 +43,7 @@ def calculate_signal_match(
     Oblicza współczynnik dopasowania między dwoma sygnałami używając OpenAI.
     
     Returns:
-        dict: {"signal_id": target_signal_id, "accurate": float 0-100}
+        dict: {"signal_id": target_signal_id, "accurate": float 0-100, "details": details}
     """
     prompt = f"""Jesteś ekspertem od matchowania ludzi w ekosystemie startupowym.
 
@@ -79,7 +79,8 @@ Odpowiedz TYLKO w formacie JSON:
     if content is None:
         return {
             "signal_id": target_signal_id,
-            "accurate": 0.0
+            "accurate": 0.0,
+            "details": None
         }
     result_text = content.strip()
     
@@ -93,12 +94,14 @@ Odpowiedz TYLKO w formacie JSON:
         result = json.loads(result_text)
         return {
             "signal_id": result.get("signal_id", target_signal_id),
-            "accurate": float(result.get("accurate", 0))
+            "accurate": float(result.get("accurate", 0)),
+            "details": result.get("details", None)
         }
     except (json.JSONDecodeError, ValueError):
         return {
             "signal_id": target_signal_id,
-            "accurate": 0.0
+            "accurate": 0.0,
+            "details": None
         }
 
 
@@ -111,7 +114,7 @@ def calculate_bulk_signal_matches(
     Oblicza współczynniki dopasowania dla wielu sygnałów naraz.
     
     Returns:
-        list[dict]: [{"signal_id": int, "accurate": float}, ...]
+        list[dict]: [{"signal_id": int, "accurate": float, "details": dict}, ...]
     """
     if not target_signals:
         return []
@@ -156,7 +159,7 @@ Zwróć wyniki dla wszystkich sygnałów: {signal_ids}"""
     
     content = response.choices[0].message.content
     if content is None:
-        return [{"signal_id": sig_id, "accurate": 0.0} for sig_id in signal_ids]
+        return [{"signal_id": sig_id, "accurate": 0.0, "details": None} for sig_id in signal_ids]
     result_text = content.strip()
     
     try:
@@ -174,13 +177,14 @@ Zwróć wyniki dla wszystkich sygnałów: {signal_ids}"""
         return [
             {
                 "signal_id": r.get("signal_id"),
-                "accurate": float(r.get("accurate", 0))
+                "accurate": float(r.get("accurate", 0)),
+                "details": r.get("details", None)
             }
             for r in results
         ]
     except (json.JSONDecodeError, ValueError):
         # Fallback - zwróć 0 dla wszystkich
-        return [{"signal_id": sig_id, "accurate": 0.0} for sig_id in signal_ids]
+        return [{"signal_id": sig_id, "accurate": 0.0, "details": None} for sig_id in signal_ids]
 
 
 __all__ = [

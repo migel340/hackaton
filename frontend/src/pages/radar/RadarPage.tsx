@@ -1,6 +1,7 @@
 import { useState } from "react";
 import RadarChart from "@/components/RadarChart";
 import type { Signal } from "@/api/signals";
+import { getSignalType } from "@/api/signals";
 import {
   useRadarData,
   RadarHeader,
@@ -32,9 +33,9 @@ const RadarPage = () => {
   if (error || !data) {
     return <RadarErrorState error={error} onRetry={refetch} />;
   }
-
-  const filteredMatches = data.matches.filter((signal) =>
-    filterType ? signal.type === filterType : true
+  console.log(data)
+  const filteredMatches = data?.matches?.matches?.filter((signal) =>
+    filterType ? getSignalType(signal) === filterType : true
   );
 
   return (
@@ -59,7 +60,7 @@ const RadarPage = () => {
 
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
         <RadarFilterButtons
-          matches={data.matches}
+          matches={data.matches.matches}
           filterType={filterType}
           onFilterChange={setFilterType}
         />

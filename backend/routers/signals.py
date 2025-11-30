@@ -216,6 +216,9 @@ def match_all_signals(
             for sig in target_signals
         ]
         
+        # Słownik do szybkiego dostępu do details
+        target_details_map = {sig.id: sig.details for sig in target_signals}
+        
         # Oblicz dopasowanie przez OpenAI
         matches = calculate_bulk_signal_matches(
             source_signal_id=source_signal.id,
@@ -223,9 +226,10 @@ def match_all_signals(
             target_signals=target_data
         )
         
-        # Filtruj po min_accurate
+        # Dodaj details do wyników i filtruj po min_accurate
         filtered_matches = [
-            m for m in matches if m["accurate"] >= min_accurate
+            {**m, "details": target_details_map.get(m["signal_id"])}
+            for m in matches if m["accurate"] >= min_accurate
         ]
         
         # Sortuj po accurate malejąco
@@ -311,6 +315,9 @@ def match_signals(
         for sig in target_signals
     ]
     
+    # Słownik do szybkiego dostępu do details
+    target_details_map = {sig.id: sig.details for sig in target_signals}
+    
     # Oblicz dopasowanie przez OpenAI
     matches = calculate_bulk_signal_matches(
         source_signal_id=signal_id,
@@ -318,9 +325,10 @@ def match_signals(
         target_signals=target_data
     )
     
-    # Filtruj po min_accurate
+    # Dodaj details do wyników i filtruj po min_accurate
     filtered_matches = [
-        m for m in matches if m["accurate"] >= min_accurate
+        {**m, "details": target_details_map.get(m["signal_id"])}
+        for m in matches if m["accurate"] >= min_accurate
     ]
     
     # Sortuj po accurate malejąco

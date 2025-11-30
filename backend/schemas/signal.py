@@ -67,6 +67,7 @@ class SignalCategoryResponse(BaseModel):
 class SignalMatchResult(BaseModel):
     signal_id: int
     accurate: float = Field(..., ge=0, le=100)
+    details: Optional[Any] = None
 
 
 class SignalMatchResponse(BaseModel):

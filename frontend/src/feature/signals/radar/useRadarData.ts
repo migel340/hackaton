@@ -4,8 +4,8 @@ import { getMatchedSignals, getUserSignals, type Signal, type MatchedSignalsResp
 interface UseRadarDataReturn {
   data: MatchedSignalsResponse | null;
   userSignals: Signal[];
-  selectedUserSignalId: string | null;
-  setSelectedUserSignalId: (id: string | null) => void;
+  selectedUserSignalId: number | null;
+  setSelectedUserSignalId: (id: number | null) => void;
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -14,7 +14,7 @@ interface UseRadarDataReturn {
 export const useRadarData = (): UseRadarDataReturn => {
   const [data, setData] = useState<MatchedSignalsResponse | null>(null);
   const [userSignals, setUserSignals] = useState<Signal[]>([]);
-  const [selectedUserSignalId, setSelectedUserSignalId] = useState<string | null>(null);
+  const [selectedUserSignalId, setSelectedUserSignalId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,12 +35,19 @@ export const useRadarData = (): UseRadarDataReturn => {
 
   // Pobierz dopasowania gdy zmieni się wybrany sygnał użytkownika
   const fetchData = useCallback(async () => {
-    if (!selectedUserSignalId && userSignals.length === 0) return;
+    if (!selectedUserSignalId) return;
 
     try {
       setLoading(true);
-      const response = await getMatchedSignals(selectedUserSignalId || undefined);
-      setData(response);
+      const matches = await getMatchedSignals(selectedUserSignalId);
+      const selectedSignal = userSignals.find(s => s.id === selectedUserSignalId);
+      
+      if (selectedSignal) {
+        setData({
+          user_signal: selectedSignal,
+          matches: matches,
+        });
+      }
       setError(null);
     } catch (err) {
       setError("Nie udało się załadować dopasowań. Spróbuj ponownie.");
@@ -48,11 +55,13 @@ export const useRadarData = (): UseRadarDataReturn => {
     } finally {
       setLoading(false);
     }
-  }, [selectedUserSignalId, userSignals.length]);
+  }, [selectedUserSignalId, userSignals]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (selectedUserSignalId && userSignals.length > 0) {
+      fetchData();
+    }
+  }, [fetchData, selectedUserSignalId, userSignals.length]);
 
   const refetch = useCallback(() => {
     fetchData();

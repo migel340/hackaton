@@ -1,24 +1,13 @@
-import { api } from "@api/api";
+import { redirect } from "react-router";
+import { getUserSignals } from "@/api/signals";
 
-export const RadarLoader = async () =>{
+export const RadarLoader = async () => {
+  const signals = await getUserSignals();
+  
+  if (signals && signals.length > 0) {
+    return { signals };
+  }
 
-    const response = await api.get('/signals/me');
-    console.log(response)
-    if(response){
-        const signals = response.signals;
-
-        if(signals && signals.length > 0){
-            const signal = signals[0];
-
-            const matchSignal = await api.get(`/signals/match/${signal.id}`);
-
-            return {matchSignal}
-            
-
-        }
-
-    }
-
-
-}
+  return redirect('/signals/add');
+};
 

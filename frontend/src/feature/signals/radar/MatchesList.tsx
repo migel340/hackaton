@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Signal } from "@/api/signals";
+import { getSignalType } from "@/api/signals";
 import { signalTypeColors } from "./signalTypeColors";
 
 interface MatchesListProps {
@@ -9,7 +10,7 @@ interface MatchesListProps {
 
 export const MatchesList = ({ matches, onSignalClick }: MatchesListProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const sortedMatches = [...matches].sort((a, b) => b.match_score - a.match_score);
+  const sortedMatches = [...matches].sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
 
   return (
     <div className="relative h-full flex items-center">
@@ -55,6 +56,8 @@ interface MatchCardProps {
 }
 
 const MatchCard = ({ signal, onClick }: MatchCardProps) => {
+  const signalType = getSignalType(signal);
+  
   return (
     <div
       className="card bg-base-100 hover:bg-base-300 cursor-pointer transition-all hover:scale-[1.02] shadow-sm"
@@ -65,15 +68,17 @@ const MatchCard = ({ signal, onClick }: MatchCardProps) => {
           <div className="flex items-center gap-2">
             <div
               className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: signalTypeColors[signal.type] }}
+              style={{ backgroundColor: signalTypeColors[signalType] }}
             />
             <span className="font-semibold text-sm truncate max-w-[140px]">
-              {signal.title}
+              {signal.details.title}
             </span>
           </div>
-          <div className="badge badge-success badge-sm">
-            {Math.round(signal.match_score * 100)}%
-          </div>
+          {signal.match_score !== undefined && (
+            <div className="badge badge-success badge-sm">
+              {Math.round(signal.match_score * 100)}%
+            </div>
+          )}
         </div>
         {signal.username && (
           <p className="text-xs text-base-content/60 mt-1">{signal.username}</p>
