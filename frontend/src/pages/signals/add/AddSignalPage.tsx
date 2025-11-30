@@ -36,16 +36,21 @@ const AddSignalPage = () => {
     }
 
     if (type === "investor") {
-      if (details.budget_min) formData.append("budget_min", String(details.budget_min));
-      if (details.budget_max) formData.append("budget_max", String(details.budget_max));
+      if (details.budget_min)
+        formData.append("budget_min", String(details.budget_min));
+      if (details.budget_max)
+        formData.append("budget_max", String(details.budget_max));
     } else if (type === "freelancer") {
-      if (details.hourly_rate) formData.append("hourly_rate", String(details.hourly_rate));
+      if (details.hourly_rate)
+        formData.append("hourly_rate", String(details.hourly_rate));
       if (details.skills && details.skills.length > 0) {
         formData.append("skills", JSON.stringify(details.skills));
       }
     } else if (type === "idea") {
-      if (details.funding_min) formData.append("funding_min", String(details.funding_min));
-      if (details.funding_max) formData.append("funding_max", String(details.funding_max));
+      if (details.funding_min)
+        formData.append("funding_min", String(details.funding_min));
+      if (details.funding_max)
+        formData.append("funding_max", String(details.funding_max));
       if (details.needed_skills && details.needed_skills.length > 0) {
         formData.append("needed_skills", JSON.stringify(details.needed_skills));
       }
@@ -59,9 +64,7 @@ const AddSignalPage = () => {
       <div className="w-full max-w-3xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{t.createNewSignal}</h1>
-          <p className="text-base-content/70">
-            {t.signalFormDescription}
-          </p>
+          <p className="text-base-content/70">{t.signalFormDescription}</p>
         </div>
 
         {actionData && !actionData.ok && actionData.message && (
@@ -83,8 +86,17 @@ const AddSignalPage = () => {
           </div>
         )}
 
-        {actionData?.ok && (
-          <div className="alert alert-success mb-6">
+        <div className="card bg-base-200 shadow-xl">
+          <div className="card-body">
+            <SignalForm onSubmit={handleSubmit} isLoading={isLoading} />
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed toast na górze ekranu - zawsze widoczny */}
+      {actionData?.ok && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="alert alert-success shadow-lg">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="stroke-current shrink-0 h-6 w-6"
@@ -98,16 +110,14 @@ const AddSignalPage = () => {
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span>{t.savedSuccessfully}</span>
-          </div>
-        )}
-
-        <div className="card bg-base-200 shadow-xl">
-          <div className="card-body">
-            <SignalForm onSubmit={handleSubmit} isLoading={isLoading} />
+            <div className="flex items-center gap-2">
+              <span>{t.savedSuccessfully}</span>
+              <span className="loading loading-spinner loading-sm"></span>
+              <span className="text-sm opacity-80">{t.redirecting}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

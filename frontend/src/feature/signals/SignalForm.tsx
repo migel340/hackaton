@@ -1,4 +1,3 @@
-
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -53,7 +52,7 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
 
   const handleTypeChange = (type: SignalType) => {
     setSignalType(type);
-    
+
     if (type === "investor") {
       reset({
         type: "investor",
@@ -93,14 +92,18 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <div className="form-control">
         <label className="label">
-          <span className="label-text font-semibold text-lg">{t.signalType}</span>
+          <span className="label-text font-semibold text-lg">
+            {t.signalType}
+          </span>
         </label>
         <div className="flex flex-wrap gap-2">
           {signalTypes.map((type) => (
             <button
               key={type}
               type="button"
-              className={`btn ${signalType === type ? "btn-primary" : "btn-outline"}`}
+              className={`btn ${
+                signalType === type ? "btn-primary" : "btn-outline"
+              }`}
               onClick={() => handleTypeChange(type)}
             >
               {signalTypeLabels[type]}
@@ -117,21 +120,23 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
         <input
           type="text"
           {...register("title")}
-          className={`input input-bordered w-full ${errors.title ? "input-error" : ""}`}
+          className={`input input-bordered w-full ${
+            errors.title ? "input-error" : ""
+          }`}
           placeholder={t.titlePlaceholder[signalType]}
         />
         {errors.title && (
           <label className="label">
-            <span className="label-text-alt text-error">{errors.title.message}</span>
+            <span className="label-text-alt text-error">
+              {errors.title.message}
+            </span>
           </label>
         )}
       </div>
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">
-            {t.descriptionLabel[signalType]}
-          </span>
+          <span className="label-text">{t.descriptionLabel[signalType]}</span>
         </label>
         <textarea
           {...register("description")}
@@ -142,7 +147,9 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
         />
         {errors.description && (
           <label className="label">
-            <span className="label-text-alt text-error">{errors.description.message}</span>
+            <span className="label-text-alt text-error">
+              {errors.description.message}
+            </span>
           </label>
         )}
       </div>
@@ -168,7 +175,10 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
                       minField.onChange(min);
                       maxField.onChange(max);
                     }}
-                    error={(errors as any).budget_max?.message || (errors as any).budget_min?.message}
+                    error={
+                      (errors as any).budget_max?.message ||
+                      (errors as any).budget_min?.message
+                    }
                   />
                 )}
               />
@@ -251,7 +261,10 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
                       minField.onChange(min);
                       maxField.onChange(max);
                     }}
-                    error={(errors as any).funding_max?.message || (errors as any).funding_min?.message}
+                    error={
+                      (errors as any).funding_max?.message ||
+                      (errors as any).funding_min?.message
+                    }
                   />
                 )}
               />
@@ -304,7 +317,9 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
         />
         {errors.categories && (
           <label className="label">
-            <span className="label-text-alt text-error">{errors.categories.message}</span>
+            <span className="label-text-alt text-error">
+              {errors.categories.message}
+            </span>
           </label>
         )}
       </div>
@@ -312,10 +327,17 @@ const SignalForm = ({ onSubmit, isLoading = false }: SignalFormProps) => {
       <div className="form-control mt-8">
         <button
           type="submit"
-          className={`btn btn-primary btn-lg w-full ${isLoading ? "loading" : ""}`}
+          className="btn btn-primary btn-lg w-full"
           disabled={isLoading}
         >
-          {isLoading ? t.submitting : t.submit}
+          {isLoading ? (
+            <>
+              <span className="loading loading-spinner loading-sm"></span>
+              {t.submitting}
+            </>
+          ) : (
+            t.submit
+          )}
         </button>
       </div>
     </form>
