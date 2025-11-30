@@ -35,7 +35,7 @@ const RadarPage = () => {
     console.log("Raw matches from API:", data.matches.matches);
     return data.matches.matches.map((match) => ({
       id: match.signal_id,
-      user_id: 0,
+      user_id: match.user_id ?? 0,
       signal_category_id: match.signal_category_id ?? 1,
       details: match.details ?? {},
       created_at: new Date().toISOString(),

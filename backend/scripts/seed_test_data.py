@@ -671,7 +671,7 @@ MAPOWANIE SYGNAŁÓW:
   - INVESTOR (3) szuka → STARTUP_IDEA (2)
 """)
     print("=" * 70)
-    print("🚀 Swagger UI: http://localhost:4000/docs")
+    print("🚀 Swagger UI: http://localhost:8000/docs")
     print("=" * 70)
 
 

@@ -1,5 +1,6 @@
 import { Outlet } from "react-router";
 import MainMenu from "@/components/MainMenu";
+import { ChatNotificationBadge } from "@/feature/chat";
 
 const MainLayout = () => {
     return (
@@ -25,7 +26,11 @@ const MainLayout = () => {
                         </label>
                     </div>
                     <div className="flex-1">
-                        <span className="text-xl font-bold">App Menu</span>
+                        <span className="text-xl font-bold lg:hidden">App Menu</span>
+                    </div>
+                    {/* Chat Notification Badge */}
+                    <div className="flex-none">
+                        <ChatNotificationBadge />
                     </div>
                 </div>
                 <main className="flex-1 p-6 bg-base-100">

@@ -210,14 +210,20 @@ def match_all_signals(
             })
             continue
         
+        # Pobierz userów dla sygnałów
+        user_ids = list(set(sig.user_id for sig in target_signals))
+        users = session.exec(select(User).where(col(User.id).in_(user_ids))).all()
+        user_map = {u.id: u.username for u in users}
+        
         # Przygotuj dane do matchowania
         target_data = [
             {"id": sig.id, "details": sig.details}
             for sig in target_signals
         ]
         
-        # Słownik do szybkiego dostępu do details
+        # Słownik do szybkiego dostępu do details i user_id
         target_details_map = {sig.id: sig.details for sig in target_signals}
+        target_user_map = {sig.id: sig.user_id for sig in target_signals}
         
         # Oblicz dopasowanie przez OpenAI
         matches = calculate_bulk_signal_matches(
@@ -226,11 +232,18 @@ def match_all_signals(
             target_signals=target_data
         )
         
-        # Dodaj details do wyników i filtruj po min_accurate
-        filtered_matches = [
-            {**m, "details": target_details_map.get(m["signal_id"])}
-            for m in matches if m["accurate"] >= min_accurate
-        ]
+        # Dodaj details, user_id i username do wyników i filtruj po min_accurate
+        filtered_matches = []
+        for m in matches:
+            if m["accurate"] >= min_accurate:
+                sig_id = m["signal_id"]
+                user_id = target_user_map.get(sig_id)
+                filtered_matches.append({
+                    **m, 
+                    "details": target_details_map.get(sig_id),
+                    "user_id": user_id,
+                    "username": user_map.get(user_id) if user_id else None
+                })
         
         # Sortuj po accurate malejąco
         filtered_matches.sort(key=lambda x: x["accurate"], reverse=True)
@@ -324,6 +337,7 @@ def match_signals(
     users = session.exec(select(User).where(col(User.id).in_(user_ids))).all()
     user_map = {u.id: u.username for u in users}
     target_username_map = {sig.id: user_map.get(sig.user_id) for sig in target_signals}
+    target_user_id_map = {sig.id: sig.user_id for sig in target_signals}
     
     # Oblicz dopasowanie przez OpenAI
     matches = calculate_bulk_signal_matches(
@@ -332,13 +346,14 @@ def match_signals(
         target_signals=target_data
     )
     
-    # Dodaj details, signal_category_id i username do wyników i filtruj po min_accurate
+    # Dodaj details, signal_category_id, username i user_id do wyników i filtruj po min_accurate
     filtered_matches = [
         {
             **m, 
             "details": target_details_map.get(m["signal_id"]),
             "signal_category_id": target_category_map.get(m["signal_id"]),
-            "username": target_username_map.get(m["signal_id"])
+            "username": target_username_map.get(m["signal_id"]),
+            "user_id": target_user_id_map.get(m["signal_id"])
         }
         for m in matches if m["accurate"] >= min_accurate
     ]
