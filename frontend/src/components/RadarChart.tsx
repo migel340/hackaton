@@ -793,38 +793,40 @@ console.log(userSignal)
       )}
 
       {/* Controls */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
-        <button
-          onClick={() =>
-            setTargetView((prev) => ({
-              ...prev,
-              scale: Math.min(5, prev.scale * 1.2),
-            }))
-          }
-          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
-          title="Przybliż"
-        >
-          +
-        </button>
-        <button
-          onClick={() =>
-            setTargetView((prev) => ({
-              ...prev,
-              scale: Math.max(0.2, prev.scale * 0.8),
-            }))
-          }
-          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
-          title="Oddal"
-        >
-          −
-        </button>
-        <button
-          onClick={handleReset}
-          className="btn btn-circle btn-sm bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110"
-          title="Resetuj widok"
-        >
-          ⟲
-        </button>
+      <div className="absolute bottom-24 inset-x-0 flex justify-center">
+        <div className="flex gap-3">
+          <button
+            onClick={() =>
+              setTargetView((prev) => ({
+                ...prev,
+                scale: Math.min(5, prev.scale * 1.2),
+              }))
+            }
+            className="btn btn-circle btn-lg bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110 text-xl"
+            title="Przybliż"
+          >
+            +
+          </button>
+          <button
+            onClick={handleReset}
+            className="btn btn-circle btn-lg bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110 text-xl"
+            title="Resetuj widok"
+          >
+            ⟲
+          </button>
+          <button
+            onClick={() =>
+              setTargetView((prev) => ({
+                ...prev,
+                scale: Math.max(0.2, prev.scale * 0.8),
+              }))
+            }
+            className="btn btn-circle btn-lg bg-base-300/80 hover:bg-base-300 backdrop-blur-sm transition-all duration-200 hover:scale-110 text-xl"
+            title="Oddal"
+          >
+            −
+          </button>
+        </div>
       </div>
       {/* Zoom indicator */}
       <div className="absolute top-4 left-4 bg-base-300/80 px-3 py-1 rounded-lg backdrop-blur-sm text-sm transition-all duration-300">
