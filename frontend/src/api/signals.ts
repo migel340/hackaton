@@ -3,26 +3,36 @@ import type { SignalType, Category, Skill } from "@/feature/signals/signalSchema
 
 // Typy dla sygnałów - nowa struktura z API
 export interface SignalDetails {
+  // Common fields
+  name?: string;
   title?: string;
   description?: string;
-  // Investor specific (z backendu)
+  categories?: Category[];
+  
+  // Investor specific
   type?: string; // np. "Angel Investor"
   ticket_size?: string;
-  stage?: string[];
+  investment_stage?: string[]; // etapy inwestycji (array)
   focus_areas?: string[];
   criteria?: string[];
-  looking_for?: string;
   value_add?: string[];
-  // Investor specific (stare)
   budget_min?: number;
   budget_max?: number;
-  categories?: Category[];
+  
   // Freelancer specific
   hourly_rate?: number;
   skills?: Skill[];
   experience?: string;
   availability?: string;
-  // Idea specific
+  
+  // Idea specific (nowa struktura z API)
+  stage?: string; // np. "MVP gotowe" - etap projektu
+  looking_for?: string[]; // kogo szukamy (array)
+  funding_needed?: string; // np. "500k PLN"
+  market_size?: string;
+  traction?: string;
+  
+  // Idea specific (stara struktura)
   funding_min?: number;
   funding_max?: number;
   needed_skills?: Skill[];
@@ -35,7 +45,8 @@ export interface SignalDetails {
 export function getSignalTitle(details: SignalDetails | null | undefined): string {
   if (!details) return "Brak szczegółów";
   
-  // Jeśli ma title, użyj go
+  // Jeśli ma name lub title, użyj go
+  if (details.name) return details.name;
   if (details.title) return details.title;
   
   // Dla inwestora - użyj typu

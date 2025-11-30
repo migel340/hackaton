@@ -1,11 +1,42 @@
 import { useRef, useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import type { Signal } from "@/api/signals";
-import { getSignalType } from "@/api/signals";
+import { getSignalType, getSignalTitle } from "@/api/signals";
 import { signalTypeLabels } from "@/feature/signals/signalSchema";
 import {
   signalTypeColors,
   signalTypeColorsHover,
 } from "@/feature/signals/radar/signalTypeColors";
+
+// Theme colors
+const themeColors = {
+  light: {
+    background: "#f8fafc",
+    grid: "rgba(100, 116, 139, 0.1)",
+    ring: (i: number, ringCount: number) => `rgba(59, 130, 246, ${0.2 + (ringCount - i) * 0.05})`,
+    ringLabel: "rgba(59, 130, 246, 0.7)",
+    crossLine: "rgba(59, 130, 246, 0.15)",
+    sweepStart: "rgba(59, 130, 246, 0.4)",
+    sweepEnd: "rgba(59, 130, 246, 0)",
+    blipBorder: "#1e293b",
+    blipBorderFaded: "rgba(30,41,59,0.3)",
+    text: "#1e293b",
+    userLabel: "#fff",
+  },
+  dark: {
+    background: "#0f172a",
+    grid: "rgba(148, 163, 184, 0.1)",
+    ring: (i: number, ringCount: number) => `rgba(96, 165, 250, ${0.25 + (ringCount - i) * 0.05})`,
+    ringLabel: "rgba(96, 165, 250, 0.8)",
+    crossLine: "rgba(96, 165, 250, 0.2)",
+    sweepStart: "rgba(96, 165, 250, 0.5)",
+    sweepEnd: "rgba(96, 165, 250, 0)",
+    blipBorder: "#e2e8f0",
+    blipBorderFaded: "rgba(226,232,240,0.3)",
+    text: "#e2e8f0",
+    userLabel: "#1e293b",
+  },
+};
 
 interface RadarChartProps {
   userSignal: Signal;
@@ -47,9 +78,31 @@ const RadarChart = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredSignal, setHoveredSignal] = useState<Signal | null>(null);
+  const [isHoveringUserBlip, setIsHoveringUserBlip] = useState(false);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [blipPositions, setBlipPositions] = useState<BlipPosition[]>([]);
   const animationRef = useRef<number>(0);
   const sweepAngleRef = useRef(0);
+console.log(userSignal)
+  // Theme state
+  const [isDark, setIsDark] = useState(() => {
+    return document.documentElement.getAttribute("data-theme") === "dark";
+  });
+
+  // Listen for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "data-theme") {
+          setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  const colors = isDark ? themeColors.dark : themeColors.light;
 
   // Animated view state - target is where we want to go, current is interpolated
   const [targetView, setTargetView] = useState<ViewState>({
@@ -162,15 +215,15 @@ const RadarChart = ({
     const { width, height } = dimensions;
     const baseRadius = 270; // Reduced by 10%
 
-    // Clear canvas with light background
-    ctx.fillStyle = "#f8fafc";
+    // Clear canvas with theme-aware background
+    ctx.fillStyle = colors.background;
     ctx.fillRect(0, 0, width, height);
 
     // Draw grid pattern (infinite grid effect)
     const gridSize = 50 * view.scale;
     const { x: originX, y: originY } = worldToScreen(0, 0, view);
 
-    ctx.strokeStyle = "rgba(100, 116, 139, 0.1)";
+    ctx.strokeStyle = colors.grid;
     ctx.lineWidth = 1;
 
     // Vertical lines
@@ -199,14 +252,14 @@ const RadarChart = ({
 
       ctx.beginPath();
       ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-      ctx.strokeStyle = `rgba(59, 130, 246, ${0.2 + (ringCount - i) * 0.05})`;
+      ctx.strokeStyle = colors.ring(i, ringCount);
       ctx.lineWidth = 1;
       ctx.stroke();
 
       // Add percentage labels on rings
       if (i < ringCount && view.scale > 0.5) {
         const percent = Math.round((1 - i / ringCount) * 100);
-        ctx.fillStyle = "rgba(59, 130, 246, 0.7)";
+        ctx.fillStyle = colors.ringLabel;
         ctx.font = `${Math.max(10, 12 * view.scale)}px sans-serif`;
         ctx.fillText(`${percent}%`, cx + radius + 5, cy - 5);
       }
@@ -216,7 +269,7 @@ const RadarChart = ({
     const { x: cx, y: cy } = worldToScreen(0, 0, view);
     const maxDrawRadius = baseRadius * view.scale;
 
-    ctx.strokeStyle = "rgba(59, 130, 246, 0.15)";
+    ctx.strokeStyle = colors.crossLine;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(cx - maxDrawRadius, cy);
@@ -241,8 +294,8 @@ const RadarChart = ({
     const sweepEndY = cy + maxDrawRadius * Math.sin(sweepAngleRef.current);
 
     const gradient = ctx.createLinearGradient(cx, cy, sweepEndX, sweepEndY);
-    gradient.addColorStop(0, "rgba(59, 130, 246, 0.4)");
-    gradient.addColorStop(1, "rgba(59, 130, 246, 0)");
+    gradient.addColorStop(0, colors.sweepStart);
+    gradient.addColorStop(1, colors.sweepEnd);
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -306,7 +359,7 @@ const RadarChart = ({
       ctx.fill();
 
       // Border (animates thickness)
-      ctx.strokeStyle = newHoverState > 0.5 ? "#1e293b" : "rgba(30,41,59,0.3)";
+      ctx.strokeStyle = newHoverState > 0.5 ? colors.blipBorder : colors.blipBorderFaded;
       ctx.lineWidth = lerp(1, 2, newHoverState);
       ctx.stroke();
 
@@ -314,7 +367,7 @@ const RadarChart = ({
       const textOpacity = Math.max(newHoverState, view.scale > 1.2 ? 1 : 0);
       if (textOpacity > 0.01) {
         ctx.globalAlpha = textOpacity;
-        ctx.fillStyle = "#1e293b";
+        ctx.fillStyle = colors.text;
         ctx.font = `bold ${Math.max(10, 12 * view.scale)}px sans-serif`;
         ctx.textAlign = "center";
         ctx.fillText(
@@ -357,12 +410,12 @@ const RadarChart = ({
     ctx.arc(cx, cy, userRadius, 0, 2 * Math.PI);
     ctx.fillStyle = userColor;
     ctx.fill();
-    ctx.strokeStyle = "#1e293b";
+    ctx.strokeStyle = colors.blipBorder;
     ctx.lineWidth = 3;
     ctx.stroke();
 
     // "TY" label
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = colors.userLabel;
     ctx.font = `bold ${Math.max(12, 14 * view.scale)}px sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -377,6 +430,7 @@ const RadarChart = ({
     userSignal,
     targetView,
     worldToScreen,
+    colors,
   ]);
 
   useEffect(() => {
@@ -477,6 +531,13 @@ const RadarChart = ({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
+    // Check if mouse is over user blip (center)
+    const { x: centerX, y: centerY } = worldToScreen(0, 0, view);
+    const userRadius = 22 * Math.min(view.scale, 1.5);
+    const distanceToCenter = Math.sqrt((mouseX - centerX) ** 2 + (mouseY - centerY) ** 2);
+    const isOverUserBlip = distanceToCenter < userRadius;
+    setIsHoveringUserBlip(isOverUserBlip);
+
     // Check if mouse is over any blip
     const hoveredBlip = blipPositions.find(({ x: worldX, y: worldY }) => {
       const { x, y } = worldToScreen(worldX, worldY, view);
@@ -485,19 +546,31 @@ const RadarChart = ({
     });
 
     setHoveredSignal(hoveredBlip?.signal || null);
-    canvas.style.cursor = hoveredBlip ? "pointer" : "grab";
+    canvas.style.cursor = (hoveredBlip || isOverUserBlip) ? "pointer" : "grab";
   };
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isPanning) return;
 
     const canvas = canvasRef.current;
-    if (!canvas || !onSignalClick) return;
+    if (!canvas) return;
 
     const view = currentViewRef.current;
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
+
+    // Check if clicked on user blip (center)
+    const { x: centerX, y: centerY } = worldToScreen(0, 0, view);
+    const userRadius = 22 * Math.min(view.scale, 1.5);
+    const distanceToCenter = Math.sqrt((mouseX - centerX) ** 2 + (mouseY - centerY) ** 2);
+    if (distanceToCenter < userRadius) {
+      setIsUserModalOpen(true);
+      return;
+    }
+
+    // Check if clicked on any other blip
+    if (!onSignalClick) return;
 
     const clickedBlip = blipPositions.find(({ x: worldX, y: worldY }) => {
       const { x, y } = worldToScreen(worldX, worldY, view);
@@ -525,12 +598,78 @@ const RadarChart = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={() => {
           setHoveredSignal(null);
+          setIsHoveringUserBlip(false);
           setIsPanning(false);
         }}
         onMouseMove={handleMouseMove}
         onClick={handleClick}
         className="absolute inset-0 cursor-grab"
       />
+
+      {/* User Signal Tooltip */}
+      {isHoveringUserBlip && userSignal && (
+        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-full -mt-16 z-30 pointer-events-none">
+          <div className="bg-base-100 border border-base-300 rounded-xl shadow-xl p-4 min-w-96 max-w-lg animate-fade-in">
+            <div className="flex items-center gap-2 mb-2">
+              <div
+                className="w-3 h-3 rounded-full shrink-0"
+                style={{ backgroundColor: signalTypeColors[getSignalType(userSignal)] }}
+              />
+              <span className="font-bold text-base-content">
+                {signalTypeLabels[getSignalType(userSignal)]}
+              </span>
+            </div>
+            <h3 className="font-semibold text-lg text-base-content mb-1 break-words">
+              {userSignal.details?.name || userSignal.details?.title || getSignalTitle(userSignal.details)}
+            </h3>
+            {userSignal.details?.description && (
+              <p className="text-sm text-base-content/70 line-clamp-3 break-words">
+                {userSignal.details.description}
+              </p>
+            )}
+            {/* Idea: stage + looking_for */}
+            {userSignal.details?.stage && typeof userSignal.details.stage === 'string' && (
+              <div className="mt-2">
+                <span className="badge badge-sm badge-info">{userSignal.details.stage}</span>
+              </div>
+            )}
+            {userSignal.details?.looking_for && Array.isArray(userSignal.details.looking_for) && userSignal.details.looking_for.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {userSignal.details.looking_for.slice(0, 3).map((item, i) => (
+                  <span key={i} className="badge badge-sm badge-secondary">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )}
+            {userSignal.details?.funding_needed && (
+              <p className="text-sm font-semibold text-primary mt-2">{userSignal.details.funding_needed}</p>
+            )}
+            {/* Freelancer: skills */}
+            {userSignal.details?.skills && userSignal.details.skills.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {userSignal.details.skills.slice(0, 5).map((skill) => (
+                  <span key={skill} className="badge badge-sm badge-primary">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            )}
+            {/* Categories */}
+            {userSignal.details?.categories && userSignal.details.categories.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {userSignal.details.categories.slice(0, 3).map((cat) => (
+                  <span key={cat} className="badge badge-sm badge-accent">
+                    {cat}
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-base-content/50 mt-3">Kliknij, aby zobaczyć szczegóły</p>
+          </div>
+        </div>
+      )}
+
       {/* Controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2">
         <button
@@ -586,6 +725,289 @@ const RadarChart = ({
           Scroll aby przybliżyć/oddalić • Przeciągnij aby przesunąć
         </div>
       </div>
+
+      {/* User Signal Modal - rendered via Portal to be above everything */}
+      {isUserModalOpen && userSignal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-base-100 rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-base-100 border-b border-base-300 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: signalTypeColors[getSignalType(userSignal)] }}
+                />
+                <span className="font-bold text-lg">
+                  {signalTypeLabels[getSignalType(userSignal)]}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsUserModalOpen(false)}
+                className="btn btn-sm btn-circle btn-ghost"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              {/* Tytuł - name lub title */}
+              {(userSignal.details?.name || userSignal.details?.title) && (
+                <h2 className="text-2xl font-bold text-base-content">
+                  {userSignal.details.name || userSignal.details.title}
+                </h2>
+              )}
+
+              {/* Opis */}
+              {userSignal.details?.description && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Opis</h3>
+                  <p className="text-base-content whitespace-pre-wrap break-words">
+                    {userSignal.details.description}
+                  </p>
+                </div>
+              )}
+
+              {/* === IDEA FIELDS (signal_category_id: 2) === */}
+              {userSignal.details?.stage && typeof userSignal.details.stage === 'string' && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Etap projektu</h3>
+                  <span className="badge badge-info badge-lg">{userSignal.details.stage}</span>
+                </div>
+              )}
+
+              {userSignal.details?.looking_for && Array.isArray(userSignal.details.looking_for) && userSignal.details.looking_for.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Kogo szukamy</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.looking_for.map((item, i) => (
+                      <span key={i} className="badge badge-secondary badge-lg">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userSignal.details?.funding_needed && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Potrzebne finansowanie</h3>
+                  <p className="text-xl font-bold text-primary">{userSignal.details.funding_needed}</p>
+                </div>
+              )}
+
+              {userSignal.details?.market_size && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Wielkość rynku</h3>
+                  <p className="text-base-content">{userSignal.details.market_size}</p>
+                </div>
+              )}
+
+              {userSignal.details?.traction && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Traction</h3>
+                  <p className="text-base-content whitespace-pre-wrap">{userSignal.details.traction}</p>
+                </div>
+              )}
+
+              {userSignal.details?.problem && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Problem</h3>
+                  <p className="text-base-content whitespace-pre-wrap">{userSignal.details.problem}</p>
+                </div>
+              )}
+
+              {userSignal.details?.solution && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Rozwiązanie</h3>
+                  <p className="text-base-content whitespace-pre-wrap">{userSignal.details.solution}</p>
+                </div>
+              )}
+
+              {userSignal.details?.market && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Rynek docelowy</h3>
+                  <p className="text-base-content whitespace-pre-wrap">{userSignal.details.market}</p>
+                </div>
+              )}
+
+              {userSignal.details?.needed_skills && userSignal.details.needed_skills.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Poszukiwane umiejętności</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.needed_skills.map((skill) => (
+                      <span key={skill} className="badge badge-secondary badge-lg">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(userSignal.details?.funding_min || userSignal.details?.funding_max) && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Zakres finansowania</h3>
+                  <p className="text-xl font-bold text-primary">
+                    {userSignal.details.funding_min?.toLocaleString()} - {userSignal.details.funding_max?.toLocaleString()} PLN
+                  </p>
+                </div>
+              )}
+
+              {/* === FREELANCER FIELDS (signal_category_id: 1) === */}
+              {userSignal.details?.skills && userSignal.details.skills.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Umiejętności</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.skills.map((skill) => (
+                      <span key={skill} className="badge badge-primary badge-lg">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userSignal.details?.hourly_rate && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Stawka godzinowa</h3>
+                  <p className="text-xl font-bold text-primary">
+                    {userSignal.details.hourly_rate} PLN/h
+                  </p>
+                </div>
+              )}
+
+              {userSignal.details?.experience && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Doświadczenie</h3>
+                  <p className="text-base-content">{userSignal.details.experience}</p>
+                </div>
+              )}
+
+              {userSignal.details?.availability && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Dostępność</h3>
+                  <p className="text-base-content">{userSignal.details.availability}</p>
+                </div>
+              )}
+
+              {/* === INVESTOR FIELDS (signal_category_id: 3) === */}
+              {userSignal.details?.type && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Typ inwestora</h3>
+                  <p className="text-base-content font-medium">{userSignal.details.type}</p>
+                </div>
+              )}
+
+              {userSignal.details?.ticket_size && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Wielkość inwestycji</h3>
+                  <p className="text-xl font-bold text-primary">{userSignal.details.ticket_size}</p>
+                </div>
+              )}
+
+              {userSignal.details?.investment_stage && userSignal.details.investment_stage.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Preferowane etapy</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.investment_stage.map((s) => (
+                      <span key={s} className="badge badge-info badge-lg">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userSignal.details?.focus_areas && userSignal.details.focus_areas.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Obszary zainteresowań</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.focus_areas.map((area) => (
+                      <span key={area} className="badge badge-warning badge-lg">
+                        {area}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userSignal.details?.criteria && userSignal.details.criteria.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Kryteria inwestycyjne</h3>
+                  <ul className="list-disc list-inside space-y-1">
+                    {userSignal.details.criteria.map((c, i) => (
+                      <li key={i} className="text-base-content">{c}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {userSignal.details?.value_add && userSignal.details.value_add.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Co oferuję</h3>
+                  <ul className="list-disc list-inside space-y-1">
+                    {userSignal.details.value_add.map((v, i) => (
+                      <li key={i} className="text-base-content">{v}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {(userSignal.details?.budget_min || userSignal.details?.budget_max) && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-1">Budżet inwestycji</h3>
+                  <p className="text-xl font-bold text-primary">
+                    {userSignal.details.budget_min?.toLocaleString()} - {userSignal.details.budget_max?.toLocaleString()} PLN
+                  </p>
+                </div>
+              )}
+
+              {/* === COMMON FIELDS === */}
+              {userSignal.details?.categories && userSignal.details.categories.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-base-content/70 mb-2">Kategorie</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userSignal.details.categories.map((cat) => (
+                      <span key={cat} className="badge badge-accent badge-lg">
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Signal metadata */}
+              <div className="divider"></div>
+              <div className="grid grid-cols-2 gap-4 text-sm text-base-content/60">
+                <div>
+                  <span className="font-medium">ID sygnału:</span> {userSignal.id}
+                </div>
+                <div>
+                  <span className="font-medium">Utworzono:</span>{" "}
+                  {new Date(userSignal.created_at).toLocaleDateString("pl-PL")}
+                </div>
+                <div>
+                  <span className="font-medium">Status:</span>{" "}
+                  <span className={userSignal.is_active ? "text-success" : "text-error"}>
+                    {userSignal.is_active ? "Aktywny" : "Nieaktywny"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-base-300 px-6 py-4">
+              <button
+                onClick={() => setIsUserModalOpen(false)}
+                className="btn btn-primary w-full"
+              >
+                Zamknij
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
