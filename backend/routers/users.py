@@ -118,112 +118,15 @@ def get_user(
     return user
 
 
-@router.put("/{user_id}", response_model=UserResponse)
-def update_user(
-    user_id: int,
-    user_update: UserUpdate,
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_current_user(
     session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user),  # Wymaga autentykacji
+    current_user: User = Depends(get_current_user),
 ):
     """
-    Aktualizuj użytkownika (wymaga autentykacji).
-    
-    Użytkownik może edytować tylko swój własny profil.
+    Usuń konto aktualnie zalogowanego użytkownika.
     """
-    # Sprawdź czy użytkownik edytuje swój profil
-    if current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only update your own profile"
-        )
-    
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    # Aktualizuj tylko podane pola
-    if user_update.username is not None:
-        # Sprawdź czy nowa nazwa użytkownika jest dostępna
-        existing = session.exec(
-            select(User).where(User.username == user_update.username, User.id != user_id)
-        ).first()
-        if existing:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already taken"
-            )
-        user.username = user_update.username
-    
-    if user_update.email is not None:
-        # Sprawdź czy nowy email jest dostępny
-        existing = session.exec(
-            select(User).where(User.email == user_update.email, User.id != user_id)
-        ).first()
-        if existing:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already taken"
-            )
-        user.email = user_update.email
-    
-    # Aktualizuj pola profilu
-    if user_update.first_name is not None:
-        user.first_name = user_update.first_name
-    if user_update.last_name is not None:
-        user.last_name = user_update.last_name
-    if user_update.bio is not None:
-        user.bio = user_update.bio
-    if user_update.avatar_url is not None:
-        user.avatar_url = user_update.avatar_url
-    if user_update.location is not None:
-        user.location = user_update.location
-    if user_update.linkedin_url is not None:
-        user.linkedin_url = user_update.linkedin_url
-    if user_update.github_url is not None:
-        user.github_url = user_update.github_url
-    if user_update.website is not None:
-        user.website = user_update.website
-    if user_update.skills is not None:
-        user.skills = user_update.skills
-    if user_update.experience_years is not None:
-        user.experience_years = user_update.experience_years
-    
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    
-    return user
-
-
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(
-    user_id: int,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user),  # Wymaga autentykacji
-):
-    """
-    Usuń użytkownika (wymaga autentykacji).
-    
-    Użytkownik może usunąć tylko swój własny profil.
-    """
-    # Sprawdź czy użytkownik usuwa swój profil
-    if current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only delete your own profile"
-        )
-    
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    session.delete(user)
+    session.delete(current_user)
     session.commit()
     
     return None
